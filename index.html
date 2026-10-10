@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bon podarunkowy - generator</title>
+<link rel="icon" href="favicon.ico">
+<style>
+  /* ---------- Fonts (self-hosted, latin + latin-ext for Polish) ---------- */
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: normal; src: url(assets/fonts/lora-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: normal; src: url(assets/fonts/lora-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "PG Lora"; font-weight: 500; font-style: normal; src: url(assets/fonts/lora-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 500; font-style: normal; src: url(assets/fonts/lora-latin-ext-500-normal.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: italic; src: url(assets/fonts/lora-latin-400-italic.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: italic; src: url(assets/fonts/lora-latin-ext-400-italic.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 400; font-style: normal; src: url(assets/fonts/cormorant-garamond-400-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 400; font-style: normal; src: url(assets/fonts/cormorant-garamond-400-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 500; font-style: normal; src: url(assets/fonts/cormorant-garamond-500-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 500; font-style: normal; src: url(assets/fonts/cormorant-garamond-500-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 600; font-style: normal; src: url(assets/fonts/cormorant-garamond-600-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 600; font-style: normal; src: url(assets/fonts/cormorant-garamond-600-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 400; font-style: italic; src: url(assets/fonts/cormorant-garamond-400-italic-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Cormorant"; font-weight: 400; font-style: italic; src: url(assets/fonts/cormorant-garamond-400-italic-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4Y Jost"; font-weight: 300; src: url(assets/fonts/jost-300-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Jost"; font-weight: 300; src: url(assets/fonts/jost-300-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4Y Jost"; font-weight: 400; src: url(assets/fonts/jost-400-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4Y Jost"; font-weight: 400; src: url(assets/fonts/jost-400-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+
+  /* ---------- Tool UI (re-themed per brand via data-brand) ---------- */
+  :root {
+    --bg: #FAF4EE; --panel: #FFF8F1; --ink: #2A171F; --muted: #6F5B68; --line: #E5D2C4;
+    --accent: #971756; --accent-ink: #FAF4EE;
+    --display: Georgia, "PG Lora", serif; --body: "PG Lora", Georgia, serif;
+  }
+  body[data-brand="m4y"] {
+    --bg: #F6F3EC; --panel: #FFFFFF; --ink: #2E4B37; --muted: #55594C; --line: #E6E2D6;
+    --accent: #2E4B37; --accent-ink: #F6F3EC;
+    --display: "M4Y Cormorant", Georgia, serif; --body: "M4Y Jost", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--body);
+    font-size: 16px; line-height: 1.5; min-height: 100vh;
+    transition: background .3s ease, color .3s ease;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 16px 64px; }
+  header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 24px; margin-bottom: 28px; }
+  .eyebrow { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 4vw, 44px); line-height: 1.1; margin: 6px 0 0; }
+
+  .brand-switch { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .brand-switch button {
+    border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px;
+    padding: 9px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  }
+  .brand-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .preview { position: static; } }
+
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 18px; }
+  .field { display: grid; gap: 6px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  input, select {
+    font: inherit; font-size: 16px; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; width: 100%; min-width: 0;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  .num-row { display: flex; gap: 8px; }
+  .num-row input { flex: 1; }
+  .ghost { font: inherit; font-size: 13px; background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 0 12px; cursor: pointer; white-space: nowrap; }
+
+  .preview { position: sticky; top: 16px; }
+  .canvas-frame { border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -32px rgba(42, 23, 31, .45); background: #ddd; }
+  canvas { display: block; width: 100%; height: auto; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .btn {
+    font: inherit; font-size: 15px; border-radius: 10px; padding: 13px 20px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn:disabled { opacity: .5; cursor: progress; }
+  .send-box { margin-top: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px; display: grid; gap: 14px; }
+  .send-box h2 { font-family: var(--display); font-weight: 400; font-size: 24px; margin: 0; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: .25s ease; max-width: calc(100% - 32px); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .history { margin-top: 22px; }
+  .history summary { cursor: pointer; font-size: 14px; color: var(--muted); }
+  .history table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+  .history td, .history th { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  .history th { font-weight: 400; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+</style>
+</head>
+<body data-brand="pg">
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="studioEyebrow">Permanent Guru · Poznań</div>
+      <h1>Bon podarunkowy</h1>
+    </div>
+    <div class="brand-switch" role="group" aria-label="Studio">
+      <button type="button" data-brand="pg" aria-pressed="true">Permanent Guru</button>
+      <button type="button" data-brand="m4y" aria-pressed="false">Massage 4 You</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <form id="form" autocomplete="off" onsubmit="return false">
+      <div class="field">
+        <label for="number">Numer bonu</label>
+        <div class="num-row">
+          <input id="number" required>
+          <button type="button" class="ghost" id="nextNumber" title="Następny wolny numer">Nowy</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="name">Imię i nazwisko osoby obdarowanej</label>
+        <input id="name" placeholder="np. Anna Kowalska" required>
+      </div>
+      <div class="field">
+        <label for="item" id="itemLabel">Zabieg</label>
+        <input id="item" list="itemList" placeholder="Wpisz lub wybierz z listy">
+        <datalist id="itemList"></datalist>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="issued">Data zakupu</label>
+          <input id="issued" type="date">
+        </div>
+        <div class="field">
+          <label for="valid">Ważny do</label>
+          <input id="valid" type="date">
+        </div>
+      </div>
+      <p class="hint" id="validHint">Ważność liczona automatycznie: 6 miesięcy od daty zakupu. Możesz ją zmienić ręcznie.</p>
+    </form>
+
+    <section class="preview" aria-label="Podgląd bonu">
+      <div class="canvas-frame"><canvas id="voucher" width="2400" height="1500"></canvas></div>
+
+      <div class="actions">
+        <button class="btn" type="button" id="download">Pobierz JPEG</button>
+        <button class="btn secondary" type="button" id="share">Wyślij klientowi</button>
+      </div>
+
+      <div class="send-box" id="sendBox" hidden>
+        <h2>Wyślij bon</h2>
+        <p class="hint">Na tym urządzeniu nie da się dołączyć pliku automatycznie. Bon został pobrany i skopiowany do schowka - otwórz wiadomość poniżej i wklej obraz (Ctrl+V) albo dołącz pobrany plik.</p>
+        <div class="field">
+          <label for="email">E-mail klienta (opcjonalnie)</label>
+          <input id="email" type="email" placeholder="klient@example.com">
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" type="button" id="mailBtn">Otwórz e-mail</button>
+          <button class="btn secondary" type="button" id="waBtn">Otwórz WhatsApp</button>
+          <button class="btn secondary" type="button" id="copyText">Kopiuj treść wiadomości</button>
+        </div>
+      </div>
+
+      <details class="history">
+        <summary>Ostatnio wystawione bony na tym urządzeniu</summary>
+        <table><thead><tr><th>Nr</th><th>Osoba</th><th>Zabieg</th><th>Ważny do</th></tr></thead><tbody id="historyBody"></tbody></table>
+      </details>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------------- Brand configuration ---------------- */
+  const BRANDS = {
+    pg: {
+      studio: "Permanent Guru",
+      eyebrow: "Permanent Guru · Poznań",
+      prefix: "PG",
+      validityMonths: 6,
+      itemLabel: "Zabieg",
+      items: [
+        "Permanentny makijaż brwi - metoda włoskowa",
+        "Makijaż permanentny brwi",
+        "Permanentny 3D makijaż ust",
+        "Makijaż permanentny - kreska",
+        "Kreska z cieniowaniem",
+        "Laminacja brwi i rzęs",
+        "Laminacja brwi",
+        "Laminacja rzęs"
+      ],
+      fileSlug: "permanent-guru",
+      site: "permanentguru.com",
+      phone: "+48 452 370 369",
+      address: "ul. Zwierzyniecka 10/2, 60-813 Poznań",
+      owner: "Iryna Malaniak",
+      message: (v) =>
+        `Dzień dobry,\n\nw załączniku przesyłam bon podarunkowy Permanent Guru nr ${v.number} dla ${v.name}` +
+        (v.item ? ` na zabieg: ${v.item}` : "") +
+        `.\nBon jest ważny do ${v.validText}. Osoba obdarowana może umówić bezpłatną konsultację pod numerem +48 452 370 369 albo przez stronę permanentguru.com.\n\nDziękuję i pozdrawiam,\nIryna Malaniak\nPermanent Guru`,
+      subject: (v) => `Bon podarunkowy Permanent Guru nr ${v.number}`
+    },
+    m4y: {
+      studio: "Massage 4 You",
+      eyebrow: "Massage 4 You · Poznań",
+      prefix: "M4Y",
+      validityMonths: 6,
+      itemLabel: "Zabieg lub kwota",
+      items: [
+        "Masaż relaksacyjny całego ciała - 60 min",
+        "Masaż zdrowotny całego ciała - 80 min",
+        "Masaż dla dwojga relaksacyjny - 60 min",
+        "170 zł", "240 zł", "320 zł"
+      ],
+      fileSlug: "massage-4-you",
+      site: "massage-4-you.com",
+      phone: "+48 533 681 901",
+      address: "ul. Zeylanda 3/1, 60-808 Poznań",
+      message: (v) =>
+        `Dzień dobry,\n\nw załączniku przesyłamy voucher upominkowy Massage 4 You nr ${v.number} dla ${v.name}` +
+        (v.item ? ` (${v.item})` : "") +
+        `.\nVoucher jest ważny do ${v.validText}. Termin można zarezerwować pod numerem +48 533 681 901 albo przez stronę massage-4-you.com.\n\nDziękujemy i pozdrawiamy,\nZespół Massage 4 You`,
+      subject: (v) => `Voucher upominkowy Massage 4 You nr ${v.number}`
+    }
+  };
+
+  /* ---------------- Small helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } }
+  };
+  const pad = (n, l = 2) => String(n).padStart(l, "0");
+  const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const plDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return `${d}.${m}.${y}`; };
+  function addMonths(iso, months) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const target = new Date(y, m - 1 + months, 1);
+    const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(d, last));
+    return isoDate(target);
+  }
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 3200);
+  }
+  function slug(s) {
+    return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L")
+      .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+  }
+
+  /* ---------------- State ---------------- */
+  let brandKey = store.get("bon.brand", "pg");
+  if (!BRANDS[brandKey]) brandKey = "pg";
+  const year = new Date().getFullYear();
+
+  function nextNumber(key) {
+    const b = BRANDS[key];
+    const last = store.get(`bon.last.${key}.${year}`, 0);
+    return `${b.prefix}-${year}-${pad(last + 1, 3)}`;
+  }
+  function rememberNumber(key, number) {
+    const m = number.match(/-(\d{4})-(\d+)$/);
+    if (!m || Number(m[1]) !== year) return;
+    const k = `bon.last.${key}.${year}`;
+    store.set(k, Math.max(store.get(k, 0), Number(m[2])));
+  }
+
+  const values = () => ({
+    number: $("number").value.trim(),
+    name: $("name").value.trim(),
+    item: $("item").value.trim(),
+    issued: $("issued").value,
+    valid: $("valid").value,
+    validText: plDate($("valid").value)
+  });
+
+  /* ---------------- Canvas drawing ---------------- */
+  const canvas = $("voucher");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  // letter-spaced text, drawn glyph by glyph (ctx.letterSpacing is not universal yet)
+  function spaced(text, x, y, spacing, align = "left") {
+    const chars = [...text];
+    const widths = chars.map((c) => ctx.measureText(c).width);
+    const total = widths.reduce((a, b) => a + b, 0) + spacing * (chars.length - 1);
+    let cx = align === "right" ? x - total : align === "center" ? x - total / 2 : x;
+    const prev = ctx.textAlign; ctx.textAlign = "left";
+    chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += widths[i] + spacing; });
+    ctx.textAlign = prev;
+    return total;
+  }
+  // largest font size (<= max) that keeps text within maxWidth
+  function fit(text, fontFn, max, min, maxWidth) {
+    let size = max;
+    ctx.font = fontFn(size);
+    while (size > min && ctx.measureText(text).width > maxWidth) { size -= 2; ctx.font = fontFn(size); }
+    return size;
+  }
+  // wrap into at most `lines` lines, shrinking font until it fits
+  function wrapFit(text, fontFn, max, min, maxWidth, lines) {
+    for (let size = max; size >= min; size -= 2) {
+      ctx.font = fontFn(size);
+      const words = text.split(/\s+/); const out = []; let line = "";
+      for (const w of words) {
+        const test = line ? line + " " + w : w;
+        if (ctx.measureText(test).width <= maxWidth || !line) line = test; else { out.push(line); line = w; }
+      }
+      if (line) out.push(line);
+      if (out.length <= lines && out.every((l) => ctx.measureText(l).width <= maxWidth)) return { size, lines: out };
+    }
+    ctx.font = fontFn(min);
+    return { size: min, lines: [text] };
+  }
+  function diagonalGradient(angleDeg, stops) {
+    const a = (angleDeg - 90) * Math.PI / 180;
+    const len = Math.abs(W * Math.cos(a)) + Math.abs(H * Math.sin(a));
+    const cx = W / 2, cy = H / 2, dx = Math.cos(a) * len / 2, dy = Math.sin(a) * len / 2;
+    const g = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+    stops.forEach(([p, c]) => g.addColorStop(p, c));
+    return g;
+  }
+  function loadImage(src) {
+    return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+  }
+
+  // decorative assets, recoloured to the card's cream
+  const assets = {};
+  async function prepareAssets() {
+    const svg = await (await fetch("assets/brands/permanent-guru-flower.svg")).text();
+    const cream = svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FAF4EE"');
+    assets.flower = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(cream));
+
+    const mark = await loadImage("assets/brands/massage-4-you-logo-mark.png");
+    const off = document.createElement("canvas"); off.width = mark.width; off.height = mark.height;
+    const o = off.getContext("2d");
+    o.drawImage(mark, 0, 0); o.globalCompositeOperation = "source-in";
+    o.fillStyle = "#F6F3EC"; o.fillRect(0, 0, off.width, off.height);
+    assets.mark = off;
+  }
+
+  /* ----- Permanent Guru: deep magenta card, matches the site's .voucher-card ----- */
+  function drawPG(v) {
+    const b = BRANDS.pg;
+    const CREAM = "#FAF4EE", soft = "rgba(250,244,238,0.72)", faint = "rgba(250,244,238,0.55)";
+    const DISPLAY = (s, st = "") => `${st} 400 ${s}px Georgia, "PG Lora", serif`;
+    const BODY = (s, st = "") => `${st} 400 ${s}px "PG Lora", Georgia, serif`;
+    const P = 150;
+
+    ctx.fillStyle = diagonalGradient(142, [[0, "#2A171F"], [0.58, "#4C1330"], [1, "#6E0F3E"]]);
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save(); ctx.globalAlpha = 0.07; ctx.fillStyle = CREAM;
+    ctx.beginPath(); ctx.arc(W - 170, 90, 600, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+    if (assets.flower) {
+      ctx.save(); ctx.globalAlpha = 0.06; ctx.translate(140, H - 120); ctx.rotate(-0.5);
+      ctx.drawImage(assets.flower, -520, -520, 1040, 1040); ctx.restore();
+    }
+
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = CREAM; ctx.font = DISPLAY(56);
+    spaced("PERMANENT GURU", P, 250, 56 * 0.26);
+    ctx.fillStyle = soft; ctx.font = BODY(32);
+    spaced("BON PODARUNKOWY", W - P, 245, 32 * 0.24, "right");
+
+    // recipient
+    ctx.fillStyle = faint; ctx.font = BODY(30);
+    spaced("DLA", P, 555, 30 * 0.26);
+    const name = v.name || "Imię i nazwisko";
+    ctx.fillStyle = v.name ? CREAM : "rgba(250,244,238,0.35)";
+    const ns = fit(name, (s) => DISPLAY(s), 150, 70, W - 2 * P);
+    ctx.font = DISPLAY(ns); ctx.fillText(name, P, 555 + 40 + ns * 0.95);
+
+    // treatment
+    let y = 555 + 40 + ns * 0.95 + 150;
+    if (v.item) {
+      ctx.fillStyle = faint; ctx.font = BODY(30);
+      spaced("ZABIEG", P, y, 30 * 0.26);
+      const w = wrapFit(v.item, (s) => DISPLAY(s, "italic"), 66, 40, W - 2 * P - 200, 2);
+      ctx.fillStyle = CREAM; ctx.font = DISPLAY(w.size, "italic");
+      w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.05 + i * w.size * 1.2));
+    }
+
+    // footer rule + details
+    const ry = 1160;
+    ctx.fillStyle = "rgba(250,244,238,0.22)"; ctx.fillRect(P, ry, W - 2 * P, 2);
+
+    const cols = [["NUMER BONU", v.number || "-"], ["WAŻNY DO", v.validText || "-"]];
+    cols.forEach(([label, val], i) => {
+      const x = P + i * 520;
+      ctx.fillStyle = faint; ctx.font = BODY(26); spaced(label, x, ry + 90, 26 * 0.24);
+      ctx.fillStyle = CREAM; ctx.font = DISPLAY(54); ctx.fillText(val, x, ry + 165);
+    });
+
+    ctx.textAlign = "right"; ctx.font = BODY(30);
+    ctx.fillStyle = CREAM; ctx.fillText(b.owner, W - P, ry + 88);
+    ctx.fillStyle = soft;
+    ctx.fillText(b.address, W - P, ry + 136);
+    ctx.fillText(`${b.phone}  ·  ${b.site}`, W - P, ry + 184);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "rgba(250,244,238,0.45)"; ctx.font = BODY(24, "italic");
+    ctx.fillText("Bon imienny, nie podlega wymianie na gotówkę. Konsultacja zawsze bezpłatna.", P, H - 70);
+  }
+
+  /* ----- Massage 4 You: forest-green card, matches the site's .voucher-card ----- */
+  function drawM4Y(v) {
+    const b = BRANDS.m4y;
+    const CREAM = "#F6F3EC", soft = "rgba(246,243,236,0.72)", GOLD = "#D2A46C";
+    const SERIF = (s, w = 500, st = "") => `${st} ${w} ${s}px "M4Y Cormorant", Georgia, serif`;
+    const SANS = (s, w = 400) => `${w} ${s}px "M4Y Jost", system-ui, sans-serif`;
+    const P = 150;
+
+    ctx.fillStyle = diagonalGradient(135, [[0, "#2A251E"], [1, "#3E5A46"]]);
+    ctx.fillRect(0, 0, W, H);
+
+    if (assets.mark) {
+      const mw = 1250, mh = mw * assets.mark.height / assets.mark.width;
+      ctx.save(); ctx.globalAlpha = 0.08; ctx.drawImage(assets.mark, W - mw + 160, H - mh + 200, mw, mh); ctx.restore();
+    }
+
+    // wordmark "MASSAGE 4 YOU" with the heavier 4, as on the site
+    ctx.textBaseline = "alphabetic"; ctx.fillStyle = CREAM;
+    const sp = 58 * 0.2; let x = P;
+    ctx.font = SERIF(58, 500); x += spaced("MASSAGE ", x, 250, sp) + sp;
+    ctx.font = SANS(52, 400); x += spaced("4", x, 250, sp) + sp;
+    ctx.font = SERIF(58, 500); spaced(" YOU", x, 250, sp);
+    ctx.fillStyle = soft; ctx.font = SANS(26, 300);
+    spaced("HEALTHY & RELAX", P, 305, 26 * 0.28);
+    ctx.font = SANS(30, 400);
+    spaced("VOUCHER UPOMINKOWY", W - P, 245, 30 * 0.2, "right");
+
+    ctx.fillStyle = GOLD; ctx.font = SANS(28, 400);
+    spaced("DLA", P, 560, 28 * 0.26);
+    const name = v.name || "Imię i nazwisko";
+    ctx.fillStyle = v.name ? CREAM : "rgba(246,243,236,0.35)";
+    const ns = fit(name, (s) => SERIF(s, 500), 160, 76, W - 2 * P);
+    ctx.font = SERIF(ns, 500); ctx.fillText(name, P, 560 + 30 + ns * 0.95);
+
+    let y = 560 + 30 + ns * 0.95 + 150;
+    if (v.item) {
+      ctx.fillStyle = GOLD; ctx.font = SANS(28, 400);
+      spaced(/^\d[\d\s]*(zł|pln)$/i.test(v.item) ? "KWOTA" : "ZABIEG", P, y, 28 * 0.26);
+      const hasDigits = /\d/.test(v.item);
+      const itemFont = hasDigits ? (s) => SANS(Math.round(s * 0.8), 300) : (s) => SERIF(s, 400, "italic");
+      const w = wrapFit(v.item, itemFont, 76, 44, W - 2 * P - 300, 2);
+      ctx.fillStyle = CREAM; ctx.font = itemFont(w.size);
+      w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.0 + i * w.size * 1.15));
+    }
+
+    const ry = 1160;
+    ctx.fillStyle = "rgba(246,243,236,0.22)"; ctx.fillRect(P, ry, W - 2 * P, 2);
+    [["NUMER VOUCHERA", v.number || "-"], ["WAŻNY DO", v.validText || "-"]].forEach(([label, val], i) => {
+      const cx = P + i * 560;
+      ctx.fillStyle = GOLD; ctx.font = SANS(25, 400); spaced(label, cx, ry + 90, 25 * 0.24);
+      // canvas cannot switch Cormorant to lining figures, so numbers are set in Jost
+      ctx.fillStyle = CREAM; ctx.font = SANS(50, 300); ctx.fillText(val, cx, ry + 162);
+    });
+
+    ctx.textAlign = "right"; ctx.font = SANS(30, 300);
+    ctx.fillStyle = CREAM; ctx.fillText(b.address, W - P, ry + 100);
+    ctx.fillStyle = soft; ctx.fillText(`${b.phone}  ·  ${b.site}`, W - P, ry + 150);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "rgba(246,243,236,0.45)"; ctx.font = SANS(23, 300);
+    ctx.fillText("Voucher imienny, nie podlega wymianie na gotówkę. Rezerwacja terminu telefonicznie lub przez stronę.", P, H - 70);
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    (brandKey === "pg" ? drawPG : drawM4Y)(values());
+  }
+
+  /* ---------------- Brand switching ---------------- */
+  function applyBrand(key, { keepNumber = false } = {}) {
+    brandKey = key; store.set("bon.brand", key);
+    const b = BRANDS[key];
+    document.body.dataset.brand = key;
+    document.querySelectorAll(".brand-switch button").forEach((btn) =>
+      btn.setAttribute("aria-pressed", String(btn.dataset.brand === key)));
+    $("studioEyebrow").textContent = b.eyebrow;
+    $("itemLabel").textContent = b.itemLabel;
+    $("itemList").innerHTML = b.items.map((i) => `<option value="${i.replace(/"/g, "&quot;")}">`).join("");
+    $("validHint").textContent = `Ważność liczona automatycznie: ${b.validityMonths} miesięcy od daty zakupu. Możesz ją zmienić ręcznie.`;
+    if (!keepNumber) $("number").value = nextNumber(key);
+    $("valid").value = addMonths($("issued").value, b.validityMonths);
+    render();
+  }
+
+  /* ---------------- Export ---------------- */
+  const toBlob = (type, q) => new Promise((res) => canvas.toBlob(res, type, q));
+  function fileName() {
+    const v = values();
+    return `bon-${BRANDS[brandKey].fileSlug}-${slug(v.number || "bez-numeru")}${v.name ? "-" + slug(v.name) : ""}.jpg`;
+  }
+  function validate() {
+    const v = values();
+    if (!v.number) { $("number").focus(); toast("Wpisz numer bonu."); return null; }
+    if (!v.name) { $("name").focus(); toast("Wpisz imię i nazwisko osoby obdarowanej."); return null; }
+    return v;
+  }
+  function logIssued(v) {
+    rememberNumber(brandKey, v.number);
+    const list = store.get(`bon.history.${brandKey}`, []).filter((h) => h.number !== v.number);
+    list.unshift({ number: v.number, name: v.name, item: v.item, valid: v.validText });
+    store.set(`bon.history.${brandKey}`, list.slice(0, 50));
+    renderHistory();
+  }
+  function renderHistory() {
+    const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const list = store.get(`bon.history.${brandKey}`, []);
+    $("historyBody").innerHTML = list.length
+      ? list.map((h) => `<tr><td>${esc(h.number)}</td><td>${esc(h.name)}</td><td>${esc(h.item)}</td><td>${esc(h.valid)}</td></tr>`).join("")
+      : `<tr><td colspan="4" style="color:var(--muted)">Brak - bony pojawią się tu po pobraniu lub wysłaniu.</td></tr>`;
+  }
+  async function download(v) {
+    const blob = await toBlob("image/jpeg", 0.93);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = fileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    logIssued(v);
+  }
+
+  $("download").addEventListener("click", async () => {
+    const v = validate(); if (!v) return;
+    await download(v); toast("Bon pobrany jako JPEG.");
+  });
+
+  $("share").addEventListener("click", async () => {
+    const v = validate(); if (!v) return;
+    const b = BRANDS[brandKey];
+    const blob = await toBlob("image/jpeg", 0.93);
+    const file = new File([blob], fileName(), { type: "image/jpeg" });
+    // Phones (and some desktops): native share sheet with the JPEG attached - WhatsApp, Messenger, Mail, Gmail…
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: b.subject(v), text: b.message(v) });
+        logIssued(v); toast("Bon udostępniony.");
+      } catch (e) { if (e.name !== "AbortError") toast("Nie udało się udostępnić - spróbuj pobrać JPEG."); }
+      return;
+    }
+    // Desktop fallback: download the file, copy the image, open a pre-filled message
+    await download(v);
+    try {
+      const png = await toBlob("image/png");
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
+    } catch { /* clipboard images not supported here - the downloaded file still works */ }
+    $("sendBox").hidden = false;
+    $("sendBox").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  $("mailBtn").addEventListener("click", () => {
+    const v = values(), b = BRANDS[brandKey];
+    location.href = `mailto:${encodeURIComponent($("email").value.trim())}?subject=${encodeURIComponent(b.subject(v))}&body=${encodeURIComponent(b.message(v))}`;
+  });
+  $("waBtn").addEventListener("click", () => {
+    const v = values(), b = BRANDS[brandKey];
+    window.open(`https://wa.me/?text=${encodeURIComponent(b.message(v))}`, "_blank", "noopener");
+  });
+  $("copyText").addEventListener("click", async () => {
+    const v = values(), b = BRANDS[brandKey];
+    try { await navigator.clipboard.writeText(b.message(v)); toast("Treść wiadomości skopiowana."); }
+    catch { toast("Nie udało się skopiować."); }
+  });
+
+  /* ---------------- Wiring ---------------- */
+  document.querySelectorAll(".brand-switch button").forEach((btn) =>
+    btn.addEventListener("click", () => { if (btn.dataset.brand !== brandKey) { applyBrand(btn.dataset.brand); renderHistory(); $("sendBox").hidden = true; } }));
+  $("nextNumber").addEventListener("click", () => { $("number").value = nextNumber(brandKey); render(); });
+  ["number", "name", "item", "valid"].forEach((id) => $(id).addEventListener("input", render));
+  $("issued").addEventListener("input", () => {
+    if ($("issued").value) $("valid").value = addMonths($("issued").value, BRANDS[brandKey].validityMonths);
+    render();
+  });
+
+  (async function init() {
+    $("issued").value = isoDate(new Date());
+    applyBrand(brandKey);
+    renderHistory();
+    // wait for the brand fonts (incl. Polish glyphs) and decorative assets, then redraw
+    const sample = "ĄąĆćĘęŁłŃńÓóŚśŹźŻż Aa";
+    await Promise.allSettled([
+      document.fonts.load('400 40px "PG Lora"', sample), document.fonts.load('italic 400 40px "PG Lora"', sample),
+      document.fonts.load('500 40px "M4Y Cormorant"', sample), document.fonts.load('600 40px "M4Y Cormorant"', sample),
+      document.fonts.load('italic 400 40px "M4Y Cormorant"', sample),
+      document.fonts.load('300 40px "M4Y Jost"', sample), document.fonts.load('400 40px "M4Y Jost"', sample),
+      prepareAssets()
+    ]);
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
