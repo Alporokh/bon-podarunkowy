@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bon podarunkowy - Permanent Guru</title>
+<link rel="icon" href="../favicon.ico">
+<link rel="stylesheet" href="../assets/voucher.css">
+<style>
+  /* ---------- Fonts (self-hosted, latin + latin-ext for Polish) ---------- */
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: normal; src: url(../assets/fonts/lora-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: normal; src: url(../assets/fonts/lora-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "PG Lora"; font-weight: 500; font-style: normal; src: url(../assets/fonts/lora-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 500; font-style: normal; src: url(../assets/fonts/lora-latin-ext-500-normal.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: italic; src: url(../assets/fonts/lora-latin-400-italic.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "PG Lora"; font-weight: 400; font-style: italic; src: url(../assets/fonts/lora-latin-ext-400-italic.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+
+  :root {
+    --bg: #FAF4EE; --panel: #FFF8F1; --ink: #2A171F; --muted: #6F5B68; --line: #E5D2C4;
+    --accent: #971756; --accent-ink: #FAF4EE;
+    --display: Georgia, "PG Lora", serif; --body: "PG Lora", Georgia, serif;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Permanent Guru · Poznań</div>
+      <h1>Bon podarunkowy</h1>
+    </div>
+  </header>
+
+  <div class="layout">
+    <form id="form" autocomplete="off" onsubmit="return false">
+      <div class="field">
+        <label for="number">Numer bonu</label>
+        <div class="num-row">
+          <input id="number" required>
+          <button type="button" class="ghost" id="nextNumber" title="Następny wolny numer">Nowy</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="name">Imię i nazwisko osoby obdarowanej</label>
+        <input id="name" placeholder="np. Anna Kowalska" required>
+      </div>
+      <div class="field">
+        <label for="item" id="itemLabel">Zabieg</label>
+        <input id="item" list="itemList" placeholder="Wpisz lub wybierz z listy">
+        <datalist id="itemList"></datalist>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="issued">Data zakupu</label>
+          <input id="issued" type="date">
+        </div>
+        <div class="field">
+          <label for="valid">Ważny do</label>
+          <input id="valid" type="date">
+        </div>
+      </div>
+      <p class="hint" id="validHint"></p>
+    </form>
+
+    <section class="preview" aria-label="Podgląd bonu">
+      <div class="canvas-frame"><canvas id="voucher" width="2400" height="1500"></canvas></div>
+
+      <div class="actions">
+        <button class="btn" type="button" id="download">Pobierz JPEG</button>
+        <button class="btn secondary" type="button" id="share">Wyślij klientowi</button>
+      </div>
+
+      <div class="send-box" id="sendBox" hidden>
+        <h2>Wyślij bon</h2>
+        <p class="hint">Na tym urządzeniu nie da się dołączyć pliku automatycznie. Bon został pobrany i skopiowany do schowka - otwórz wiadomość poniżej i wklej obraz (Ctrl+V) albo dołącz pobrany plik.</p>
+        <div class="field">
+          <label for="email">E-mail klienta (opcjonalnie)</label>
+          <input id="email" type="email" placeholder="klient@example.com">
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" type="button" id="mailBtn">Otwórz e-mail</button>
+          <button class="btn secondary" type="button" id="waBtn">Otwórz WhatsApp</button>
+          <button class="btn secondary" type="button" id="copyText">Kopiuj treść wiadomości</button>
+        </div>
+      </div>
+
+      <details class="history">
+        <summary>Ostatnio wystawione bony na tym urządzeniu</summary>
+        <table><thead><tr><th>Nr</th><th>Osoba</th><th>Zabieg</th><th>Ważny do</th></tr></thead><tbody id="historyBody"></tbody></table>
+      </details>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../assets/voucher.js"></script>
+<script>
+Voucher.start({
+  key: "pg",
+  prefix: "PG",
+  validityMonths: 6,
+  itemLabel: "Zabieg",
+  items: [
+    "Permanentny makijaż brwi - metoda włoskowa",
+    "Makijaż permanentny brwi",
+    "Permanentny 3D makijaż ust",
+    "Makijaż permanentny - kreska",
+    "Kreska z cieniowaniem",
+    "Korekta przez 1-2 miesiące",
+    "Korekta kreski z cieniowaniem",
+    "Włoskowa technika - korekta",
+    "Usuwanie makijażu permanentnego removerem",
+    "Rekonstrukcja brwi przy alopecji",
+    "Laminacja brwi i rzęs",
+    "Laminacja brwi",
+    "Laminacja rzęs",
+    "Manicure hybrydowy",
+    "Pedicure klasyczny",
+    "Pedicure hybrydowy",
+    "Nail art i zdobienia",
+    "Przedłużanie paznokci"
+  ],
+  fileSlug: "permanent-guru",
+  site: "permanentguru.com",
+  phone: "+48 452 370 369",
+  address: "ul. Zwierzyniecka 10/2, 60-813 Poznań",
+  owner: "Iryna Malaniak",
+  message: (v) =>
+    `Dzień dobry,\n\nw załączniku przesyłam bon podarunkowy Permanent Guru nr ${v.number} dla ${v.name}` +
+    (v.item ? ` na zabieg: ${v.item}` : "") +
+    `.\nBon jest ważny do ${v.validText}. Osoba obdarowana może umówić bezpłatną konsultację pod numerem +48 452 370 369 albo przez stronę permanentguru.com.\n\nDziękuję i pozdrawiam,\nIryna Malaniak\nPermanent Guru`,
+  subject: (v) => `Bon podarunkowy Permanent Guru nr ${v.number}`,
+  fonts: ['400 40px "PG Lora"', 'italic 400 40px "PG Lora"'],
+
+  // decorative flower, recoloured to the card's cream
+  async prepare({ assets, loadImage }) {
+    const svg = await (await fetch("../assets/brands/permanent-guru-flower.svg")).text();
+    const cream = svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FAF4EE"');
+    assets.flower = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(cream));
+  },
+
+  /* Deep magenta card, matches the site's .voucher-card */
+  draw(v, { ctx, W, H, spaced, fit, wrapFit, diagonalGradient, assets }) {
+    const b = this;
+    const CREAM = "#FAF4EE", soft = "rgba(250,244,238,0.72)", faint = "rgba(250,244,238,0.55)";
+    const DISPLAY = (s, st = "") => `${st} 400 ${s}px Georgia, "PG Lora", serif`;
+    const BODY = (s, st = "") => `${st} 400 ${s}px "PG Lora", Georgia, serif`;
+    const P = 150;
+
+    ctx.fillStyle = diagonalGradient(142, [[0, "#2A171F"], [0.58, "#4C1330"], [1, "#6E0F3E"]]);
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save(); ctx.globalAlpha = 0.07; ctx.fillStyle = CREAM;
+    ctx.beginPath(); ctx.arc(W - 170, 90, 600, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+    if (assets.flower) {
+      ctx.save(); ctx.globalAlpha = 0.06; ctx.translate(140, H - 120); ctx.rotate(-0.5);
+      ctx.drawImage(assets.flower, -520, -520, 1040, 1040); ctx.restore();
+    }
+
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = CREAM; ctx.font = DISPLAY(56);
+    spaced("PERMANENT GURU", P, 250, 56 * 0.26);
+    ctx.fillStyle = soft; ctx.font = BODY(32);
+    spaced("BON PODARUNKOWY", W - P, 245, 32 * 0.24, "right");
+
+    // recipient
+    ctx.fillStyle = faint; ctx.font = BODY(30);
+    spaced("DLA", P, 555, 30 * 0.26);
+    const name = v.name || "Imię i nazwisko";
+    ctx.fillStyle = v.name ? CREAM : "rgba(250,244,238,0.35)";
+    const ns = fit(name, (s) => DISPLAY(s), 150, 70, W - 2 * P);
+    ctx.font = DISPLAY(ns); ctx.fillText(name, P, 555 + 40 + ns * 0.95);
+
+    // treatment
+    let y = 555 + 40 + ns * 0.95 + 150;
+    if (v.item) {
+      ctx.fillStyle = faint; ctx.font = BODY(30);
+      spaced("ZABIEG", P, y, 30 * 0.26);
+      const w = wrapFit(v.item, (s) => DISPLAY(s, "italic"), 66, 40, W - 2 * P - 200, 2);
+      ctx.fillStyle = CREAM; ctx.font = DISPLAY(w.size, "italic");
+      w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.05 + i * w.size * 1.2));
+    }
+
+    // footer rule + details
+    const ry = 1160;
+    ctx.fillStyle = "rgba(250,244,238,0.22)"; ctx.fillRect(P, ry, W - 2 * P, 2);
+
+    const cols = [["NUMER BONU", v.number || "-"], ["WAŻNY DO", v.validText || "-"]];
+    cols.forEach(([label, val], i) => {
+      const x = P + i * 520;
+      ctx.fillStyle = faint; ctx.font = BODY(26); spaced(label, x, ry + 90, 26 * 0.24);
+      ctx.fillStyle = CREAM; ctx.font = DISPLAY(54); ctx.fillText(val, x, ry + 165);
+    });
+
+    ctx.textAlign = "right"; ctx.font = BODY(30);
+    ctx.fillStyle = CREAM; ctx.fillText(b.owner, W - P, ry + 88);
+    ctx.fillStyle = soft;
+    ctx.fillText(b.address, W - P, ry + 136);
+    ctx.fillText(`${b.phone}  ·  ${b.site}`, W - P, ry + 184);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "rgba(250,244,238,0.45)"; ctx.font = BODY(24, "italic");
+    ctx.fillText("Bon imienny, nie podlega wymianie na gotówkę. Konsultacja zawsze bezpłatna.", P, H - 70);
+  }
+});
+</script>
+</body>
+</html>
