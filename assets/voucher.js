@@ -43,14 +43,20 @@
       store.set(k, Math.max(store.get(k, 0), Number(m[2])));
     }
 
-    const values = () => ({
-      number: $("number").value.trim(),
-      name: $("name").value.trim(),
-      item: $("item").value.trim(),
-      issued: $("issued").value,
-      valid: $("valid").value,
-      validText: plDate($("valid").value)
-    });
+    const values = () => {
+      // a bare number ("500") is an amount voucher - show it as "500 zł"
+      let item = $("item").value.trim();
+      if (/^\d[\d\s]*$/.test(item)) item += " zł";
+      return {
+        number: $("number").value.trim(),
+        name: $("name").value.trim(),
+        item,
+        isAmount: /^\d[\d\s]*(zł|pln)$/i.test(item),
+        issued: $("issued").value,
+        valid: $("valid").value,
+        validText: plDate($("valid").value)
+      };
+    };
 
     /* ---------------- Canvas drawing helpers ---------------- */
     const canvas = $("voucher");
