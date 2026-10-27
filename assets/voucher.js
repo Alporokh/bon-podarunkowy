@@ -47,10 +47,14 @@
       // a bare number ("500") is an amount voucher - show it as "500 zł"
       let item = $("item").value.trim();
       if (/^\d[\d\s]*$/.test(item)) item += " zł";
+      // optional separate amount field (pages that have one)
+      let amount = $("amount") ? $("amount").value.trim() : "";
+      if (/^\d[\d\s]*([.,]\d+)?$/.test(amount)) amount += " zł";
       return {
         number: $("number").value.trim(),
         name: $("name").value.trim(),
         item,
+        amount,
         isAmount: /^\d[\d\s]*(zł|pln)$/i.test(item),
         issued: $("issued").value,
         valid: $("valid").value,
@@ -131,7 +135,7 @@
     function logIssued(v) {
       rememberNumber(v.number);
       const list = store.get(`bon.history.${key}`, []).filter((x) => x.number !== v.number);
-      list.unshift({ number: v.number, name: v.name, item: v.item, valid: v.validText });
+      list.unshift({ number: v.number, name: v.name, item: [v.item, v.amount].filter(Boolean).join(" · "), valid: v.validText });
       store.set(`bon.history.${key}`, list.slice(0, 50));
       renderHistory();
     }
@@ -192,7 +196,7 @@
 
     /* ---------------- Wiring ---------------- */
     $("nextNumber").addEventListener("click", () => { $("number").value = nextNumber(); render(); });
-    ["number", "name", "item", "valid"].forEach((id) => $(id).addEventListener("input", render));
+    ["number", "name", "item", "amount", "valid"].forEach((id) => $(id) && $(id).addEventListener("input", render));
     $("issued").addEventListener("input", () => {
       if ($("issued").value) $("valid").value = addMonths($("issued").value, b.validityMonths);
       render();

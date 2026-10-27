@@ -46,9 +46,13 @@
         <input id="name" placeholder="np. Anna Kowalska" required>
       </div>
       <div class="field">
-        <label for="item" id="itemLabel">Zabieg lub kwota</label>
-        <input id="item" list="itemList" placeholder="Zabieg z listy albo kwota, np. 500">
+        <label for="item" id="itemLabel">Zabieg</label>
+        <input id="item" list="itemList" placeholder="Wpisz lub wybierz z listy (opcjonalnie)">
         <datalist id="itemList"></datalist>
+      </div>
+      <div class="field">
+        <label for="amount">Kwota (opcjonalnie)</label>
+        <input id="amount" inputmode="numeric" placeholder="np. 500">
       </div>
       <div class="row2">
         <div class="field">
@@ -100,7 +104,7 @@ Voucher.start({
   key: "pg",
   prefix: "PG",
   validityMonths: 6,
-  itemLabel: "Zabieg lub kwota",
+  itemLabel: "Zabieg",
   items: [
     // Makijaż permanentny
     "Permanentny makijaż brwi - metoda włoskowa",
@@ -118,23 +122,20 @@ Voucher.start({
     "Laminacja brwi",
     "Laminacja rzęs",
     // Tatuaż artystyczny
-    "Mini tatuaż, 2-4 cm - od 200 zł",
-    "Mały tatuaż, ok. 5 x 5 cm - od 250 zł",
-    "Napis, ok. 10 cm - od 250 zł",
-    "Średni tatuaż, ok. 10 x 10 cm - od 500 zł",
-    "Średni tatuaż, ok. 12 x 18 cm - od 900 zł",
-    "Duży tatuaż, ok. 17 x 24 cm - od 1500 zł",
-    "Tatuaż - sesja całodniowa, ok. 6-8 godz. - od 1200 zł",
-    "Cover-up tatuażu - od 800 zł",
+    "Mini tatuaż, 2-4 cm",
+    "Mały tatuaż, ok. 5 x 5 cm",
+    "Napis, ok. 10 cm",
+    "Średni tatuaż, ok. 10 x 10 cm",
+    "Średni tatuaż, ok. 12 x 18 cm",
+    "Duży tatuaż, ok. 17 x 24 cm",
+    "Tatuaż - sesja całodniowa (6-8 godz.)",
+    "Cover-up tatuażu",
     // Paznokcie
     "Manicure hybrydowy",
     "Pedicure klasyczny",
     "Pedicure hybrydowy",
     "Nail art i zdobienia",
-    "Przedłużanie paznokci",
-    // Kwoty - bon na dowolny zabieg o podanej wartości
-    "100 zł", "200 zł", "250 zł", "300 zł", "400 zł", "500 zł",
-    "600 zł", "800 zł", "900 zł", "1000 zł", "1200 zł", "1500 zł"
+    "Przedłużanie paznokci"
   ],
   fileSlug: "permanent-guru",
   site: "permanentguru.com",
@@ -143,7 +144,8 @@ Voucher.start({
   owner: "Iryna Malaniak",
   message: (v) =>
     `Dzień dobry,\n\nw załączniku przesyłam bon podarunkowy Permanent Guru nr ${v.number} dla ${v.name}` +
-    (v.item ? (v.isAmount ? ` o wartości ${v.item}` : ` na zabieg: ${v.item}`) : "") +
+    (v.item ? ` na zabieg: ${v.item}` : "") +
+    (v.amount ? ` o wartości ${v.amount}` : "") +
     `.\nBon jest ważny do ${v.validText}. Osoba obdarowana może umówić bezpłatną konsultację pod numerem +48 452 370 369 albo przez stronę permanentguru.com.\n\nDziękuję i pozdrawiam,\nIryna Malaniak\nPermanent Guru`,
   subject: (v) => `Bon podarunkowy Permanent Guru nr ${v.number}`,
   fonts: ['400 40px "PG Lora"', 'italic 400 40px "PG Lora"'],
@@ -188,12 +190,13 @@ Voucher.start({
     const ns = fit(name, (s) => DISPLAY(s), 150, 70, W - 2 * P);
     ctx.font = DISPLAY(ns); ctx.fillText(name, P, 555 + 40 + ns * 0.95);
 
-    // treatment
+    // treatment, or the amount alone when there is no treatment
     let y = 555 + 40 + ns * 0.95 + 150;
-    if (v.item) {
+    const main = v.item ? ["ZABIEG", v.item] : v.amount ? ["WARTOŚĆ BONU", v.amount] : null;
+    if (main) {
       ctx.fillStyle = faint; ctx.font = BODY(30);
-      spaced(v.isAmount ? "WARTOŚĆ BONU" : "ZABIEG", P, y, 30 * 0.26);
-      const w = wrapFit(v.item, (s) => DISPLAY(s, "italic"), 66, 40, W - 2 * P - 200, 2);
+      spaced(main[0], P, y, 30 * 0.26);
+      const w = wrapFit(main[1], (s) => DISPLAY(s, "italic"), 66, 40, W - 2 * P - 200, 2);
       ctx.fillStyle = CREAM; ctx.font = DISPLAY(w.size, "italic");
       w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.05 + i * w.size * 1.2));
     }
@@ -203,8 +206,10 @@ Voucher.start({
     ctx.fillStyle = "rgba(250,244,238,0.22)"; ctx.fillRect(P, ry, W - 2 * P, 2);
 
     const cols = [["NUMER BONU", v.number || "-"], ["WAŻNY DO", v.validText || "-"]];
+    // with both a treatment and an amount, the amount gets its own footer column
+    if (v.item && v.amount) cols.push(["WARTOŚĆ", v.amount]);
     cols.forEach(([label, val], i) => {
-      const x = P + i * 520;
+      const x = P + i * 470;
       ctx.fillStyle = faint; ctx.font = BODY(26); spaced(label, x, ry + 90, 26 * 0.24);
       ctx.fillStyle = CREAM; ctx.font = DISPLAY(54); ctx.fillText(val, x, ry + 165);
     });
