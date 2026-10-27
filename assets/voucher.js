@@ -202,9 +202,24 @@
       render();
     });
 
+    // treatment dropdown: grouped list, plus "Inny zabieg…" which reveals a free-text field
+    const CUSTOM = "__custom";
+    $("itemSelect").addEventListener("change", () => {
+      const custom = $("itemSelect").value === CUSTOM;
+      $("item").hidden = !custom;
+      $("item").value = custom ? "" : $("itemSelect").value;
+      if (custom) $("item").focus();
+      render();
+    });
+
     (async function init() {
       $("itemLabel").textContent = b.itemLabel;
-      $("itemList").innerHTML = b.items.map((i) => `<option value="${i.replace(/"/g, "&quot;")}">`).join("");
+      const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      $("itemSelect").innerHTML = `<option value="">- bez zabiegu -</option>` +
+        Object.entries(b.items).map(([group, list]) =>
+          `<optgroup label="${esc(group)}">` + list.map((i) => `<option value="${esc(i)}">${esc(i)}</option>`).join("") + `</optgroup>`
+        ).join("") +
+        `<option value="${CUSTOM}">Inny zabieg (wpisz)…</option>`;
       $("validHint").textContent = `Ważność liczona automatycznie: ${b.validityMonths} miesięcy od daty zakupu. Możesz ją zmienić ręcznie.`;
       $("issued").value = isoDate(new Date());
       $("valid").value = addMonths($("issued").value, b.validityMonths);

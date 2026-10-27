@@ -46,9 +46,9 @@
         <input id="name" placeholder="np. Anna Kowalska" required>
       </div>
       <div class="field">
-        <label for="item" id="itemLabel">Zabieg</label>
-        <input id="item" list="itemList" placeholder="Wpisz lub wybierz z listy (opcjonalnie)">
-        <datalist id="itemList"></datalist>
+        <label for="itemSelect" id="itemLabel">Zabieg</label>
+        <select id="itemSelect"></select>
+        <input id="item" placeholder="Wpisz nazwę zabiegu" hidden>
       </div>
       <div class="field">
         <label for="amount">Kwota (opcjonalnie)</label>
@@ -105,38 +105,42 @@ Voucher.start({
   prefix: "PG",
   validityMonths: 6,
   itemLabel: "Zabieg",
-  items: [
-    // Makijaż permanentny
-    "Permanentny makijaż brwi - metoda włoskowa",
-    "Makijaż permanentny brwi",
-    "Permanentny 3D makijaż ust",
-    "Makijaż permanentny - kreska",
-    "Kreska z cieniowaniem",
-    "Korekta przez 1-2 miesiące",
-    "Korekta kreski z cieniowaniem",
-    "Włoskowa technika - korekta",
-    "Usuwanie makijażu permanentnego removerem",
-    "Rekonstrukcja brwi przy alopecji",
-    // Pielęgnacja brwi i rzęs
-    "Laminacja brwi i rzęs",
-    "Laminacja brwi",
-    "Laminacja rzęs",
-    // Tatuaż artystyczny
-    "Mini tatuaż, 2-4 cm",
-    "Mały tatuaż, ok. 5 x 5 cm",
-    "Napis, ok. 10 cm",
-    "Średni tatuaż, ok. 10 x 10 cm",
-    "Średni tatuaż, ok. 12 x 18 cm",
-    "Duży tatuaż, ok. 17 x 24 cm",
-    "Tatuaż - sesja całodniowa (6-8 godz.)",
-    "Cover-up tatuażu",
-    // Paznokcie
-    "Manicure hybrydowy",
-    "Pedicure klasyczny",
-    "Pedicure hybrydowy",
-    "Nail art i zdobienia",
-    "Przedłużanie paznokci"
-  ],
+  items: {
+    "Makijaż permanentny": [
+      "Permanentny makijaż brwi - metoda włoskowa",
+      "Makijaż permanentny brwi",
+      "Permanentny 3D makijaż ust",
+      "Makijaż permanentny - kreska",
+      "Kreska z cieniowaniem",
+      "Korekta przez 1-2 miesiące",
+      "Korekta kreski z cieniowaniem",
+      "Włoskowa technika - korekta",
+      "Usuwanie makijażu permanentnego removerem",
+      "Rekonstrukcja brwi przy alopecji"
+    ],
+    "Pielęgnacja brwi i rzęs": [
+      "Laminacja brwi i rzęs",
+      "Laminacja brwi",
+      "Laminacja rzęs"
+    ],
+    "Tatuaż artystyczny": [
+      "Mini tatuaż, 2-4 cm",
+      "Mały tatuaż, ok. 5 x 5 cm",
+      "Napis, ok. 10 cm",
+      "Średni tatuaż, ok. 10 x 10 cm",
+      "Średni tatuaż, ok. 12 x 18 cm",
+      "Duży tatuaż, ok. 17 x 24 cm",
+      "Tatuaż - sesja całodniowa (6-8 godz.)",
+      "Cover-up tatuażu"
+    ],
+    "Paznokcie": [
+      "Manicure hybrydowy",
+      "Pedicure klasyczny",
+      "Pedicure hybrydowy",
+      "Nail art i zdobienia",
+      "Przedłużanie paznokci"
+    ]
+  },
   fileSlug: "permanent-guru",
   site: "permanentguru.com",
   phone: "+48 452 370 369",
