@@ -28,8 +28,29 @@
       .replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
   }
 
+  // UI strings - Polish by default, a page can override any of them via `ui`
+  const DEFAULT_UI = {
+    noItem: "- bez zabiegu -",
+    customItem: "Inny zabieg (wpisz)…",
+    validHint: (m) => `Ważność liczona automatycznie: ${m} miesięcy od daty zakupu. Możesz ją zmienić ręcznie.`,
+    needNumber: "Wpisz numer bonu.",
+    needName: "Wpisz imię i nazwisko osoby obdarowanej.",
+    downloaded: "Bon pobrany jako JPEG.",
+    shared: "Bon udostępniony.",
+    shareFailed: "Nie udało się udostępnić - spróbuj pobrać JPEG.",
+    textCopied: "Treść wiadomości skopiowana.",
+    copyFailed: "Nie udało się skopiować.",
+    historyEmpty: "Brak - bony pojawią się tu po pobraniu lub wysłaniu.",
+    filePrefix: "bon",
+    noNumber: "bez-numeru"
+  };
+
   function start(b) {
     const key = b.key;
+    const T = Object.assign({}, DEFAULT_UI, b.ui);
+    const currency = b.currency || "zł";
+    const amountRe = /^\d[\d\s]*(zł|pln|kč|czk)$/i;
+    const dateText = b.formatDate || plDate;
     const year = new Date().getFullYear();
 
     function nextNumber() {
@@ -46,19 +67,19 @@
     const values = () => {
       // a bare number ("500") is an amount voucher - show it as "500 zł"
       let item = $("item").value.trim();
-      if (/^\d[\d\s]*$/.test(item)) item += " zł";
+      if (/^\d[\d\s]*$/.test(item)) item += " " + currency;
       // optional separate amount field (pages that have one)
       let amount = $("amount") ? $("amount").value.trim() : "";
-      if (/^\d[\d\s]*([.,]\d+)?$/.test(amount)) amount += " zł";
+      if (/^\d[\d\s]*([.,]\d+)?$/.test(amount)) amount += " " + currency;
       return {
         number: $("number").value.trim(),
         name: $("name").value.trim(),
         item,
         amount,
-        isAmount: /^\d[\d\s]*(zł|pln)$/i.test(item),
+        isAmount: amountRe.test(item),
         issued: $("issued").value,
         valid: $("valid").value,
-        validText: plDate($("valid").value)
+        validText: $("valid").value ? dateText($("valid").value) : ""
       };
     };
 
@@ -124,12 +145,12 @@
     const toBlob = (type, q) => new Promise((res) => canvas.toBlob(res, type, q));
     function fileName() {
       const v = values();
-      return `bon-${b.fileSlug}-${slug(v.number || "bez-numeru")}${v.name ? "-" + slug(v.name) : ""}.jpg`;
+      return `${T.filePrefix}-${b.fileSlug}-${slug(v.number || T.noNumber)}${v.name ? "-" + slug(v.name) : ""}.jpg`;
     }
     function validate() {
       const v = values();
-      if (!v.number) { $("number").focus(); toast("Wpisz numer bonu."); return null; }
-      if (!v.name) { $("name").focus(); toast("Wpisz imię i nazwisko osoby obdarowanej."); return null; }
+      if (!v.number) { $("number").focus(); toast(T.needNumber); return null; }
+      if (!v.name) { $("name").focus(); toast(T.needName); return null; }
       return v;
     }
     function logIssued(v) {
@@ -144,7 +165,7 @@
       const list = store.get(`bon.history.${key}`, []);
       $("historyBody").innerHTML = list.length
         ? list.map((x) => `<tr><td>${esc(x.number)}</td><td>${esc(x.name)}</td><td>${esc(x.item)}</td><td>${esc(x.valid)}</td></tr>`).join("")
-        : `<tr><td colspan="4" style="color:var(--muted)">Brak - bony pojawią się tu po pobraniu lub wysłaniu.</td></tr>`;
+        : `<tr><td colspan="4" style="color:var(--muted)">${T.historyEmpty}</td></tr>`;
     }
     async function download(v) {
       const blob = await toBlob("image/jpeg", 0.93);
@@ -157,7 +178,7 @@
 
     $("download").addEventListener("click", async () => {
       const v = validate(); if (!v) return;
-      await download(v); toast("Bon pobrany jako JPEG.");
+      await download(v); toast(T.downloaded);
     });
 
     $("share").addEventListener("click", async () => {
@@ -168,8 +189,8 @@
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: b.subject(v), text: b.message(v) });
-          logIssued(v); toast("Bon udostępniony.");
-        } catch (e) { if (e.name !== "AbortError") toast("Nie udało się udostępnić - spróbuj pobrać JPEG."); }
+          logIssued(v); toast(T.shared);
+        } catch (e) { if (e.name !== "AbortError") toast(T.shareFailed); }
         return;
       }
       // Desktop fallback: download the file, copy the image, open a pre-filled message
@@ -190,8 +211,8 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(b.message(values()))}`, "_blank", "noopener");
     });
     $("copyText").addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(b.message(values())); toast("Treść wiadomości skopiowana."); }
-      catch { toast("Nie udało się skopiować."); }
+      try { await navigator.clipboard.writeText(b.message(values())); toast(T.textCopied); }
+      catch { toast(T.copyFailed); }
     });
 
     /* ---------------- Wiring ---------------- */
@@ -215,19 +236,19 @@
     (async function init() {
       $("itemLabel").textContent = b.itemLabel;
       const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-      $("itemSelect").innerHTML = `<option value="">- bez zabiegu -</option>` +
+      $("itemSelect").innerHTML = `<option value="">${esc(T.noItem)}</option>` +
         Object.entries(b.items).map(([group, list]) =>
           `<optgroup label="${esc(group)}">` + list.map((i) => `<option value="${esc(i)}">${esc(i)}</option>`).join("") + `</optgroup>`
         ).join("") +
-        `<option value="${CUSTOM}">Inny zabieg (wpisz)…</option>`;
-      $("validHint").textContent = `Ważność liczona automatycznie: ${b.validityMonths} miesięcy od daty zakupu. Możesz ją zmienić ręcznie.`;
+        `<option value="${CUSTOM}">${esc(T.customItem)}</option>`;
+      $("validHint").textContent = T.validHint(b.validityMonths);
       $("issued").value = isoDate(new Date());
       $("valid").value = addMonths($("issued").value, b.validityMonths);
       $("number").value = nextNumber();
       render();
       renderHistory();
       // wait for the brand fonts (incl. Polish glyphs) and decorative assets, then redraw
-      const sample = "ĄąĆćĘęŁłŃńÓóŚśŹźŻż Aa";
+      const sample = b.fontSample || "ĄąĆćĘęŁłŃńÓóŚśŹźŻż Aa";
       await Promise.allSettled([...b.fonts.map((f) => document.fonts.load(f, sample)), b.prepare(h)]);
       render();
     })();

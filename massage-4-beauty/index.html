@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dárkový poukaz - Massage 4 Beauty</title>
+<link rel="icon" href="../favicon.ico">
+<link rel="stylesheet" href="../assets/voucher.css">
+<style>
+  /* ---------- Fonts (self-hosted, latin + latin-ext for Czech) ---------- */
+  @font-face { font-family: "M4B Cormorant"; font-weight: 400; font-style: normal; src: url(../assets/fonts/cormorant-garamond-400-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 400; font-style: normal; src: url(../assets/fonts/cormorant-garamond-400-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 500; font-style: normal; src: url(../assets/fonts/cormorant-garamond-500-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 500; font-style: normal; src: url(../assets/fonts/cormorant-garamond-500-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 600; font-style: normal; src: url(../assets/fonts/cormorant-garamond-600-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 600; font-style: normal; src: url(../assets/fonts/cormorant-garamond-600-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 400; font-style: italic; src: url(../assets/fonts/cormorant-garamond-400-italic-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Cormorant"; font-weight: 400; font-style: italic; src: url(../assets/fonts/cormorant-garamond-400-italic-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4B Jost"; font-weight: 300; src: url(../assets/fonts/jost-300-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Jost"; font-weight: 300; src: url(../assets/fonts/jost-300-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  @font-face { font-family: "M4B Jost"; font-weight: 400; src: url(../assets/fonts/jost-400-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+  @font-face { font-family: "M4B Jost"; font-weight: 400; src: url(../assets/fonts/jost-400-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02AF; }
+  :root {
+    --bg: #F4F1EA; --panel: #FBFAF6; --ink: #272B25; --muted: #6E7468; --line: rgba(39, 43, 37, .14);
+    --accent: #39483C; --accent-ink: #F4F1EA;
+    --display: "M4B Cormorant", Georgia, serif; --body: "M4B Jost", system-ui, sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Massage 4 Beauty · Praha</div>
+      <h1>Dárkový poukaz</h1>
+    </div>
+  </header>
+
+  <div class="layout">
+    <form id="form" autocomplete="off" onsubmit="return false">
+      <div class="field">
+        <label for="number">Číslo poukazu</label>
+        <div class="num-row">
+          <input id="number" required>
+          <button type="button" class="ghost" id="nextNumber" title="Další volné číslo">Nové</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="name">Jméno obdarovaného</label>
+        <input id="name" placeholder="např. Jana Nováková" required>
+      </div>
+      <div class="field">
+        <label for="itemSelect" id="itemLabel">Masáž</label>
+        <select id="itemSelect"></select>
+        <input id="item" placeholder="Napište název masáže" hidden>
+      </div>
+      <div class="field">
+        <label for="amount">Částka (volitelně)</label>
+        <input id="amount" inputmode="numeric" placeholder="např. 1500 (od 600 Kč)">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="issued">Datum vystavení</label>
+          <input id="issued" type="date">
+        </div>
+        <div class="field">
+          <label for="valid">Platný do</label>
+          <input id="valid" type="date">
+        </div>
+      </div>
+      <p class="hint" id="validHint"></p>
+    </form>
+
+    <section class="preview" aria-label="Náhled poukazu">
+      <div class="canvas-frame"><canvas id="voucher" width="2400" height="1500"></canvas></div>
+
+      <div class="actions">
+        <button class="btn" type="button" id="download">Stáhnout JPEG</button>
+        <button class="btn secondary" type="button" id="share">Poslat klientovi</button>
+      </div>
+
+      <div class="send-box" id="sendBox" hidden>
+        <h2>Poslat poukaz</h2>
+        <p class="hint">Na tomto zařízení nejde soubor přiložit automaticky. Poukaz se stáhl a zkopíroval do schránky - otevřete zprávu níže a vložte obrázek (Ctrl+V), nebo přiložte stažený soubor.</p>
+        <div class="field">
+          <label for="email">E-mail klienta (volitelně)</label>
+          <input id="email" type="email" placeholder="klient@example.com">
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" type="button" id="mailBtn">Otevřít e-mail</button>
+          <button class="btn secondary" type="button" id="waBtn">Otevřít WhatsApp</button>
+          <button class="btn secondary" type="button" id="copyText">Kopírovat text zprávy</button>
+        </div>
+      </div>
+
+      <details class="history">
+        <summary>Naposledy vystavené poukazy na tomto zařízení</summary>
+        <table><thead><tr><th>Č.</th><th>Jméno</th><th>Masáž</th><th>Platný do</th></tr></thead><tbody id="historyBody"></tbody></table>
+      </details>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../assets/voucher.js"></script>
+<script>
+// "1500 Kč" -> "1 500 Kč" (Czech thousands separator, non-breaking)
+const czk = (s) => s.replace(/\s/g, "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1 ").replace(/Kč$/i, " Kč");
+
+Voucher.start({
+  key: "m4b",
+  prefix: "M4B",
+  validityMonths: 12,
+  currency: "Kč",
+  itemLabel: "Masáž",
+  formatDate: (iso) => { const [y, m, d] = iso.split("-"); return `${Number(d)}. ${Number(m)}. ${y}`; },
+  fontSample: "ČčĎďĚěŇňŘřŠšŤťŮůŽžÝýÁáÍíÉéÚú Aa",
+  ui: {
+    noItem: "- bez masáže (jen částka) -",
+    customItem: "Jiná masáž (napište)…",
+    validHint: (m) => `Platnost se počítá automaticky: ${m} měsíců od data vystavení. Můžete ji změnit ručně.`,
+    needNumber: "Vyplňte číslo poukazu.",
+    needName: "Vyplňte jméno obdarovaného.",
+    downloaded: "Poukaz stažen jako JPEG.",
+    shared: "Poukaz odeslán.",
+    shareFailed: "Sdílení se nepodařilo - zkuste poukaz stáhnout.",
+    textCopied: "Text zprávy zkopírován.",
+    copyFailed: "Kopírování se nepodařilo.",
+    historyEmpty: "Zatím nic - poukazy se zde objeví po stažení nebo odeslání.",
+    filePrefix: "poukaz",
+    noNumber: "bez-cisla"
+  },
+  items: {
+    "Obličej": [
+      "Lymfatická masáž obličeje · 45 min",
+      "Rituál pro obličej - krk, dekolt, obličej a hlava · 60 min",
+      "Myofasciální masáž obličeje · 45 min",
+      "Liftingová masáž · 45 min",
+      "Masáž krku, dekoltu a rukou · 60 min",
+      "Vakuová (baňková) masáž obličeje · 45 min",
+      "Masáž Gua Sha · 45 min",
+      "Bukální masáž · 30 min",
+      "Masáž hlavy · 30 min"
+    ],
+    "Tělo": [
+      "Sportovní masáž · 60 min",
+      "Masáž bambusovými metličkami · 60 min",
+      "Lymfodrenážní masáž · 60 min",
+      "Anticelulitidová masáž · 45 min",
+      "Medová masáž · 60 min",
+      "Klasická masáž · 60 min",
+      "Aroma masáž · 60 min",
+      "Vakuová (baňková) masáž těla · 45 min",
+      "Masáž zad · 30 min",
+      "Reflexní masáž chodidel · 30 min"
+    ]
+  },
+  fileSlug: "massage-4-beauty",
+  site: "beautymassage.cz",
+  phone: "+420 721 761 411",
+  address: "Děkanská vinice I 819/16, Praha 4 – Nusle",
+  owner: "Ludmila Yemelianova",
+  message: (v) =>
+    `Dobrý den,\n\nv příloze posílám dárkový poukaz Massage 4 Beauty č. ${v.number} na jméno ${v.name}` +
+    (v.item ? ` - ${v.item.replace(" · ", ", ")}` : "") +
+    (v.amount ? ` v hodnotě ${czk(v.amount)}` : "") +
+    `.\nPoukaz platí do ${v.validText}. Termín si můžete domluvit na čísle +420 721 761 411 nebo přes beautymassage.cz.\n\nDěkuji a přeji krásný den,\nLudmila Yemelianova\nMassage 4 Beauty`,
+  subject: (v) => `Dárkový poukaz Massage 4 Beauty č. ${v.number}`,
+  fonts: [
+    '400 40px "M4B Cormorant"', '500 40px "M4B Cormorant"', 'italic 400 40px "M4B Cormorant"',
+    '300 40px "M4B Jost"', '400 40px "M4B Jost"'
+  ],
+
+  // Ludmila's signature (the site logo), recoloured to the card's ivory
+  async prepare({ assets, loadImage }) {
+    const sig = await loadImage("../assets/brands/massage-4-beauty-signature.png");
+    const off = document.createElement("canvas"); off.width = sig.width; off.height = sig.height;
+    const o = off.getContext("2d");
+    o.drawImage(sig, 0, 0); o.globalCompositeOperation = "source-in";
+    o.fillStyle = "#F4F1EA"; o.fillRect(0, 0, off.width, off.height);
+    assets.signature = off;
+  },
+
+  /* Deep sage-green card, matches the site's .voucher-card */
+  draw(v, { ctx, W, H, spaced, fit, wrapFit, diagonalGradient, assets }) {
+    const b = this;
+    const IVORY = "#F4F1EA", soft = "rgba(244,241,234,0.62)", SAGE = "#B8C7A8";
+    const SERIF = (s, w = 500, st = "") => `${st} ${w} ${s}px "M4B Cormorant", Georgia, serif`;
+    const SANS = (s, w = 400) => `${w} ${s}px "M4B Jost", system-ui, sans-serif`;
+    const P = 150;
+
+    // background: linear 122deg + dark glow top-left + soft sheen bottom-right, as on the site
+    ctx.fillStyle = diagonalGradient(122, [[0, "#26302A"], [0.52, "#35452F"], [1, "#3E5138"]]);
+    ctx.fillRect(0, 0, W, H);
+    const glow = (x, y, r, c0) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, c0); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    };
+    glow(W * 0.08, 0, 1700, "rgba(42,50,42,0.9)");
+    glow(W * 0.88, H * 0.92, 1100, "rgba(233,238,227,0.10)");
+
+    // header
+    ctx.textBaseline = "alphabetic"; ctx.fillStyle = IVORY;
+    ctx.font = SERIF(60, 500); spaced("MASSAGE 4 BEAUTY", P, 250, 60 * 0.22);
+    ctx.fillStyle = soft; ctx.font = SANS(24, 300);
+    spaced("CERTIFIKOVANÁ MASÉRKA · PRAHA", P, 308, 24 * 0.28);
+    ctx.font = SANS(28, 400);
+    spaced("DÁRKOVÝ POUKAZ", W - P, 245, 28 * 0.28, "right");
+    ctx.textAlign = "right"; ctx.fillStyle = "rgba(244,241,234,0.78)"; ctx.font = SERIF(46, 400, "italic");
+    ctx.fillText("Chvíle klidu pro blízké lidi", W - P, 318);
+    ctx.textAlign = "left";
+
+    // recipient
+    ctx.fillStyle = SAGE; ctx.font = SANS(28, 400);
+    spaced("PRO", P, 560, 28 * 0.28);
+    const name = v.name || "Jméno a příjmení";
+    ctx.fillStyle = v.name ? IVORY : "rgba(244,241,234,0.35)";
+    const ns = fit(name, (s) => SERIF(s, 500), 160, 76, W - 2 * P);
+    ctx.font = SERIF(ns, 500); ctx.fillText(name, P, 560 + 30 + ns * 0.95);
+
+    // massage (name in italic serif, duration in Jost - canvas can't give Cormorant lining figures),
+    // or the amount alone when there is no massage
+    const y = 560 + 30 + ns * 0.95 + 150;
+    const itemMaxW = W - 2 * P - 600;   // keep clear of the signature
+    if (v.item) {
+      const [title, dur] = v.item.split(" · ");
+      ctx.fillStyle = SAGE; ctx.font = SANS(28, 400);
+      spaced("POUKAZ NA", P, y, 28 * 0.28);
+      const w = wrapFit(title, (s) => SERIF(s, 400, "italic"), 80, 46, itemMaxW, 2);
+      ctx.fillStyle = IVORY; ctx.font = SERIF(w.size, 400, "italic");
+      w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.0 + i * w.size * 1.15));
+      if (dur) {
+        ctx.fillStyle = soft; ctx.font = SANS(34, 300);
+        spaced(dur.toUpperCase(), P, y + 30 + w.size * 1.0 + (w.lines.length - 1) * w.size * 1.15 + 70, 34 * 0.18);
+      }
+    } else if (v.amount) {
+      ctx.fillStyle = SAGE; ctx.font = SANS(28, 400);
+      spaced("HODNOTA POUKAZU", P, y, 28 * 0.28);
+      ctx.fillStyle = IVORY; ctx.font = SANS(84, 300);
+      ctx.fillText(czk(v.amount), P, y + 30 + 84);
+    }
+
+    // signature, as if the voucher were signed
+    const ry = 1160;
+    if (assets.signature) {
+      const sw = 500, sh = sw * assets.signature.height / assets.signature.width;
+      ctx.save(); ctx.globalAlpha = 0.92;
+      ctx.drawImage(assets.signature, W - P - sw, ry - 50 - sh, sw, sh); ctx.restore();
+    }
+
+    // footer rule + details
+    ctx.fillStyle = "rgba(244,241,234,0.22)"; ctx.fillRect(P, ry, W - 2 * P, 2);
+    const cols = [["ČÍSLO POUKAZU", v.number || "-"], ["PLATNÝ DO", v.validText || "-"]];
+    // with both a massage and an amount, the amount gets its own footer column
+    if (v.item && v.amount) cols.push(["HODNOTA", czk(v.amount)]);
+    cols.forEach(([label, val], i) => {
+      const cx = P + i * 470;
+      ctx.fillStyle = SAGE; ctx.font = SANS(25, 400); spaced(label, cx, ry + 90, 25 * 0.24);
+      ctx.fillStyle = IVORY; ctx.font = SANS(50, 300); ctx.fillText(val, cx, ry + 162);
+    });
+
+    ctx.textAlign = "right"; ctx.font = SANS(30, 300);
+    ctx.fillStyle = IVORY; ctx.fillText(b.address, W - P, ry + 100);
+    ctx.fillStyle = soft; ctx.fillText(`${b.phone}  ·  ${b.site}`, W - P, ry + 150);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "rgba(244,241,234,0.45)"; ctx.font = SANS(23, 300);
+    ctx.fillText("Poukaz je na jméno a nelze ho směnit za peníze. Při zrušení termínu méně než 24 hodin předem poukaz propadá.", P, H - 70);
+  }
+});
+
+// the client's featured service is preselected
+(() => {
+  const s = document.getElementById("itemSelect");
+  s.value = "Lymfatická masáž obličeje · 45 min";
+  s.dispatchEvent(new Event("change"));
+})();
+</script>
+</body>
+</html>
