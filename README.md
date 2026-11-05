@@ -28,7 +28,7 @@ Bon jest rysowany na `<canvas>` w kolorach i fontach stron:
 
 - Permanent Guru: magenta `#971756` / `#6E0F3E`, krem `#FAF4EE`, Georgia + Lora, motyw kwiatu
 - Massage 4 You: zieleń `#2E4B37` / `#3E5A46`, akcent złoty, Cormorant Garamond + Jost, logo-sygnet
-- Massage 4 Beauty: szałwiowa zieleń `#26302A` → `#3E5138`, kość słoniowa `#F4F1EA`, Cormorant Garamond + Jost, podpis Ludmily jako logo
+- Massage 4 Beauty: szałwiowa zieleń `#26302A` → `#3E5138`, kość słoniowa `#F4F1EA`, Cormorant Garamond + Jost, podpis Liudmyly (SVG) jako logo
 
 Fonty są hostowane lokalnie w `assets/fonts` (z polskimi znakami). Strony mają `noindex` - to narzędzie wewnętrzne.
 

@@ -172,14 +172,11 @@ Voucher.start({
     '300 40px "M4B Jost"', '400 40px "M4B Jost"'
   ],
 
-  // Ludmila's signature (the site logo), recoloured to the card's ivory
+  // Liudmyla's signature (vector), recoloured to the card's ivory
   async prepare({ assets, loadImage }) {
-    const sig = await loadImage("../assets/brands/massage-4-beauty-signature.png");
-    const off = document.createElement("canvas"); off.width = sig.width; off.height = sig.height;
-    const o = off.getContext("2d");
-    o.drawImage(sig, 0, 0); o.globalCompositeOperation = "source-in";
-    o.fillStyle = "#F4F1EA"; o.fillRect(0, 0, off.width, off.height);
-    assets.signature = off;
+    const svg = await (await fetch("../assets/brands/massage-4-beauty-signature.svg")).text();
+    const ivory = svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#F4F1EA"');
+    assets.signature = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(ivory));
   },
 
   /* Deep sage-green card, matches the site's .voucher-card */
@@ -245,7 +242,7 @@ Voucher.start({
     // signature, as if the voucher were signed
     const ry = 1160;
     if (assets.signature) {
-      const sw = 500, sh = sw * assets.signature.height / assets.signature.width;
+      const sw = 600, sh = sw * assets.signature.height / assets.signature.width;
       ctx.save(); ctx.globalAlpha = 0.92;
       ctx.drawImage(assets.signature, W - P - sw, ry - 50 - sh, sw, sh); ctx.restore();
     }
