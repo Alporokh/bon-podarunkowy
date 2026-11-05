@@ -160,12 +160,12 @@ Voucher.start({
   site: "beautymassage.cz",
   phone: "+420 721 761 411",
   address: "Děkanská vinice I 819/16, Praha 4 – Nusle",
-  owner: "Ludmila Yemelianova",
+  owner: "Liudmyla Yemelianova",
   message: (v) =>
     `Dobrý den,\n\nv příloze posílám dárkový poukaz Massage 4 Beauty č. ${v.number} na jméno ${v.name}` +
     (v.item ? ` - ${v.item.replace(" · ", ", ")}` : "") +
     (v.amount ? ` v hodnotě ${czk(v.amount)}` : "") +
-    `.\nPoukaz platí do ${v.validText}. Termín si můžete domluvit na čísle +420 721 761 411 nebo přes beautymassage.cz.\n\nDěkuji a přeji krásný den,\nLudmila Yemelianova\nMassage 4 Beauty`,
+    `.\nPoukaz platí do ${v.validText}. Termín si můžete domluvit na čísle +420 721 761 411 nebo přes beautymassage.cz.\n\nDěkuji a přeji krásný den,\nLiudmyla Yemelianova\nMassage 4 Beauty`,
   subject: (v) => `Dárkový poukaz Massage 4 Beauty č. ${v.number}`,
   fonts: [
     '400 40px "M4B Cormorant"', '500 40px "M4B Cormorant"', 'italic 400 40px "M4B Cormorant"',
