@@ -56,6 +56,11 @@
         <select id="itemSelect"></select>
         <input id="item" placeholder="Wpisz nazwę zabiegu" hidden>
       </div>
+      <div class="field">
+        <label for="wishes">Życzenia (opcjonalnie)</label>
+        <textarea id="wishes" maxlength="220" rows="3" placeholder="np. Wszystkiego najlepszego z okazji urodzin! Czas tylko dla Ciebie."></textarea>
+        <p class="hint">Pojawią się na bonie po prawej stronie. Do 220 znaków, Enter zaczyna nową linię.</p>
+      </div>
       <div class="row2">
         <div class="field">
           <label for="issued">Data zakupu</label>
@@ -266,7 +271,9 @@ Voucher.start({
     spaced("DLA", P, 560, 28 * 0.26);
     const name = v.name || "Imię i nazwisko";
     ctx.fillStyle = v.name ? CREAM : "rgba(246,243,236,0.35)";
-    const ns = fit(name, (s) => SERIF(s, 500), 160, 76, W - 2 * P);
+    // with wishes, the card splits into two columns: recipient + treatment left, wishes right
+    const WX = 1400, leftW = v.wishes ? WX - P - 110 : W - 2 * P;
+    const ns = fit(name, (s) => SERIF(s, 500), 160, 76, leftW);
     ctx.font = SERIF(ns, 500); ctx.fillText(name, P, 560 + 30 + ns * 0.95);
 
     let y = 560 + 30 + ns * 0.95 + 150;
@@ -275,9 +282,35 @@ Voucher.start({
       spaced(/^\d[\d\s]*(zł|pln)$/i.test(v.item) ? "KWOTA" : "ZABIEG", P, y, 28 * 0.26);
       const hasDigits = /\d/.test(v.item);
       const itemFont = hasDigits ? (s) => SANS(Math.round(s * 0.8), 300) : (s) => SERIF(s, 400, "italic");
-      const w = wrapFit(v.item, itemFont, 76, 44, W - 2 * P - 300, 2);
+      const w = wrapFit(v.item, itemFont, 76, 44, v.wishes ? leftW : W - 2 * P - 300, v.wishes ? 3 : 2);
       ctx.fillStyle = CREAM; ctx.font = itemFont(w.size);
       w.lines.forEach((l, i) => ctx.fillText(l, P, y + 30 + w.size * 1.0 + i * w.size * 1.15));
+    }
+
+    // personal wishes: italic serif in the right column, own line breaks kept, shrunk to fit
+    if (v.wishes) {
+      const top = 560, bottom = 1075, colW = W - P - WX;
+      ctx.fillStyle = "rgba(210,164,108,0.45)"; ctx.fillRect(WX - 70, top - 30, 2, bottom - top + 30);
+      ctx.fillStyle = GOLD; ctx.font = SANS(28, 400);
+      spaced("ŻYCZENIA", WX, top, 28 * 0.26);
+      const font = (s) => SERIF(s, 400, "italic");
+      let size = 60, lines = [];
+      for (; size >= 30; size -= 2) {
+        ctx.font = font(size); lines = [];
+        for (const para of v.wishes.split(/\n/)) {
+          let line = "";
+          // Polish typography: a one-letter word (i, a, w, z, o, u) never ends a line
+          const glued = para.trim().replace(/(^| )([aiouwzAIOUWZ]) +/g, "$1$2 ");
+          for (const word of glued.split(/ +/).filter(Boolean)) {
+            const test = line ? line + " " + word : word;
+            if (ctx.measureText(test).width <= colW || !line) line = test; else { lines.push(line); line = word; }
+          }
+          lines.push(line);
+        }
+        if ((top + 40 + lines.length * size * 1.3 <= bottom) && lines.every((l) => ctx.measureText(l).width <= colW)) break;
+      }
+      ctx.fillStyle = CREAM; ctx.font = font(size);
+      lines.forEach((l, i) => ctx.fillText(l, WX, top + 40 + size + i * size * 1.3));
     }
 
     const ry = 1160;

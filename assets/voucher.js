@@ -76,6 +76,8 @@
         name: $("name").value.trim(),
         item,
         amount,
+        // optional personal wishes (pages that have the field)
+        wishes: $("wishes") ? $("wishes").value.trim() : "",
         isAmount: amountRe.test(item),
         issued: $("issued").value,
         valid: $("valid").value,
@@ -217,7 +219,7 @@
 
     /* ---------------- Wiring ---------------- */
     $("nextNumber").addEventListener("click", () => { $("number").value = nextNumber(); render(); });
-    ["number", "name", "item", "amount", "valid"].forEach((id) => $(id) && $(id).addEventListener("input", render));
+    ["number", "name", "item", "amount", "wishes", "valid"].forEach((id) => $(id) && $(id).addEventListener("input", render));
     $("issued").addEventListener("input", () => {
       if ($("issued").value) $("valid").value = addMonths($("issued").value, b.validityMonths);
       render();

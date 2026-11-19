@@ -1,9 +1,9 @@
-# Bon podarunkowy - generator
+﻿# Bon podarunkowy - generator
 
 Narzędzie do wystawiania imiennych bonów podarunkowych dla studiów w Poznaniu i Pradze. Każde studio ma osobną stronę i widzi tylko swoje bony:
 
 - **Permanent Guru** (permanentguru.com) - https://alporokh.github.io/bon-podarunkowy/permanentguru/ - bon na zabieg, ważny 6 miesięcy
-- **Massage 4 You** (massage-4-you.com) - https://alporokh.github.io/bon-podarunkowy/massage-4-you/ - voucher na zabieg lub kwotę
+- **Massage 4 You** (massage-4-you.com) - https://alporokh.github.io/bon-podarunkowy/massage-4-you/ - voucher na zabieg lub kwotę, z opcjonalnymi życzeniami (do 220 znaków, drukowane na bonie po prawej)
 - **Massage 4 Beauty** (beautymassage.cz, Praga) - https://alporokh.github.io/bon-podarunkowy/massage-4-beauty/ - dárkový poukaz na masaż i/lub kwotę w Kč, ważny 12 miesięcy, strona po czesku
 
 Strona główna (`/bon-podarunkowy/`) nie linkuje do żadnego studia.
