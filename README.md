@@ -1,4 +1,4 @@
-﻿# Bon podarunkowy - generator
+# Bon podarunkowy - generator
 
 Narzędzie do wystawiania imiennych bonów podarunkowych dla studiów w Poznaniu i Pradze. Każde studio ma osobną stronę i widzi tylko swoje bony:
 
