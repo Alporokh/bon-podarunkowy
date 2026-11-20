@@ -37,6 +37,7 @@
     needName: "Wpisz imię i nazwisko osoby obdarowanej.",
     downloaded: "Bon pobrany jako JPEG.",
     pdfDownloaded: "Bon pobrany jako PDF - gotowy do druku na A4.",
+    pdfTwoPages: " Strona 1 z życzeniami, strona 2 bez.",
     shared: "Bon udostępniony.",
     shareFailed: "Nie udało się udostępnić - spróbuj pobrać JPEG.",
     textCopied: "Treść wiadomości skopiowana.",
@@ -144,16 +145,16 @@
 
     // pages may add drawPrint(): a black-and-white design used for the printable PDF
     const printView = () => !!(b.drawPrint && $("printPreview") && $("printPreview").checked);
-    function paint(hh, print) {
+    function paint(hh, print, override) {
       hh.ctx.clearRect(0, 0, W, H);
-      (print ? b.drawPrint : b.draw).call(b, values(), hh);
+      (print ? b.drawPrint : b.draw).call(b, Object.assign(values(), override), hh);
     }
     function render() { paint(h, printView()); }
     // the colour or print version, reusing the preview canvas when it already shows that version
-    function exportCanvas(print) {
-      if (print === printView()) return canvas;
+    function exportCanvas(print, override) {
+      if (print === printView() && !override) return canvas;
       const off = document.createElement("canvas"); off.width = W; off.height = H;
-      paint(helpers(off), print);
+      paint(helpers(off), print, override);
       return off;
     }
 
@@ -198,8 +199,8 @@
     });
 
     /* Print-ready PDF: A4 landscape, voucher 240 mm wide centred, with cut marks.
-       Written by hand (one page, one JPEG image), so no PDF library is needed. */
-    function pdfFromJpeg(jpeg, title) {
+       One page per JPEG. Written by hand, so no PDF library is needed. */
+    function pdfFromJpegs(jpegs, title) {
       const mm = 72 / 25.4, PW = 297 * mm, PH = 210 * mm;
       const w = 240 * mm, ht = w * H / W, x = (PW - w) / 2, y = (PH - ht) / 2;
       const f = (n) => n.toFixed(2), gap = 3 * mm, len = 7 * mm;
@@ -213,14 +214,21 @@
       // PDF strings: keep the title ASCII so no font/encoding is needed
       const ascii = title.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L")
         .replace(/[^\x20-\x7E]/g, "").replace(/[()\\]/g, "");
+      // objects: 1 catalog, 2 page tree, then page / content / image for each page, then info
+      const pageIds = jpegs.map((_, i) => 3 + i * 3);
       const objs = [
         "<< /Type /Catalog /Pages 2 0 R >>",
-        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(PW)} ${f(PH)}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`,
-        [`<< /Length ${content.length} >>\nstream\n`, content, "\nendstream"],
-        [`<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, jpeg, "\nendstream"],
-        `<< /Title (${ascii}) /Producer (Voucher generator) >>`
+        `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${jpegs.length} >>`
       ];
+      jpegs.forEach((jpeg, i) => {
+        const id = pageIds[i];
+        objs.push(
+          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(PW)} ${f(PH)}] /Resources << /XObject << /Im0 ${id + 2} 0 R >> >> /Contents ${id + 1} 0 R >>`,
+          [`<< /Length ${content.length} >>\nstream\n`, content, "\nendstream"],
+          [`<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, jpeg, "\nendstream"]
+        );
+      });
+      objs.push(`<< /Title (${ascii}) /Producer (Voucher generator) >>`);
       const enc = new TextEncoder(), parts = [], offsets = [];
       let pos = 0;
       const put = (p) => { const u = typeof p === "string" ? enc.encode(p) : p; parts.push(u); pos += u.length; };
@@ -234,13 +242,17 @@
 
     if ($("pdf")) $("pdf").addEventListener("click", async () => {
       const v = validate(); if (!v) return;
-      const jpeg = new Uint8Array(await (await toBlob("image/jpeg", 0.95, exportCanvas(!!b.drawPrint))).arrayBuffer());
-      const blob = pdfFromJpeg(jpeg, b.subject(v));
+      const print = !!b.drawPrint;
+      const jpegOf = async (cv) => new Uint8Array(await (await toBlob("image/jpeg", 0.95, cv)).arrayBuffer());
+      // with wishes: page 1 with them, page 2 the same voucher without - the client prints the one they prefer
+      const pages = [await jpegOf(exportCanvas(print))];
+      if (v.wishes) pages.push(await jpegOf(exportCanvas(print, { wishes: "" })));
+      const blob = pdfFromJpegs(pages, b.subject(v));
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.jpg$/, ".pdf");
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      logIssued(v); toast(T.pdfDownloaded);
+      logIssued(v); toast(T.pdfDownloaded + (v.wishes ? T.pdfTwoPages : ""));
     });
 
     $("share").addEventListener("click", async () => {

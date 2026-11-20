@@ -13,7 +13,7 @@ Strona główna (`/bon-podarunkowy/`) nie linkuje do żadnego studia.
 1. Numer bonu podpowiada się sam (`PG-2026-001`, `M4Y-2026-001`, …) - przycisk **Nowy** daje kolejny wolny numer. Można go też wpisać ręcznie.
 2. Wpisz imię i nazwisko osoby obdarowanej, zabieg (lub kwotę) i ewentualnie popraw datę ważności.
 3. **Pobierz JPEG** - zapisuje bon (2400 × 1500 px).
-   **Pobierz PDF do druku** (Massage 4 You) - czarno-biała wersja na białym tle (podwójna ramka, logo, sylwetka z logo jako delikatny cień), A4 poziomo, bon 240 mm szerokości na środku ze znacznikami cięcia, do wydrukowania w domu.
+   **Pobierz PDF do druku** (Massage 4 You) - czarno-biała wersja na białym tle (podwójna ramka, logo, sylwetka z logo jako delikatny cień), A4 poziomo, bon 240 mm szerokości na środku ze znacznikami cięcia, do wydrukowania w domu. Jeśli wpisano życzenia, PDF ma 2 strony: 1 - z życzeniami, 2 - bez życzeń (klient drukuje wybraną).
    Pole „Pokaż wersję do druku” przełącza podgląd na wersję czarno-białą; JPEG i wysyłka zawsze używają wersji kolorowej.
 4. **Wyślij klientowi** - na telefonie otwiera systemowe udostępnianie z dołączonym plikiem (WhatsApp, Messenger, Gmail…). Na komputerze pobiera plik, kopiuje obraz do schowka i otwiera gotową wiadomość e-mail / WhatsApp do wklejenia.
 
