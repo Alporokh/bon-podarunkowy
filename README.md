@@ -3,7 +3,7 @@
 Narzędzie do wystawiania imiennych bonów podarunkowych dla studiów w Poznaniu i Pradze. Każde studio ma osobną stronę i widzi tylko swoje bony:
 
 - **Permanent Guru** (permanentguru.com) - https://alporokh.github.io/bon-podarunkowy/permanentguru/ - bon na zabieg, ważny 6 miesięcy
-- **Massage 4 You** (massage-4-you.com) - https://alporokh.github.io/bon-podarunkowy/massage-4-you/ - voucher na zabieg lub kwotę, z opcjonalnymi życzeniami (do 220 znaków, drukowane na bonie po prawej)
+- **Massage 4 You** (massage-4-you.com) - https://alporokh.github.io/bon-podarunkowy/massage-4-you/ - voucher na zabieg lub kwotę, z opcjonalnymi życzeniami (do 220 znaków, drukowane na bonie po prawej), z logo studia ze strony i PDF do druku
 - **Massage 4 Beauty** (beautymassage.cz, Praga) - https://alporokh.github.io/bon-podarunkowy/massage-4-beauty/ - dárkový poukaz na masaż i/lub kwotę w Kč, ważny 12 miesięcy, strona po czesku
 
 Strona główna (`/bon-podarunkowy/`) nie linkuje do żadnego studia.
@@ -13,6 +13,7 @@ Strona główna (`/bon-podarunkowy/`) nie linkuje do żadnego studia.
 1. Numer bonu podpowiada się sam (`PG-2026-001`, `M4Y-2026-001`, …) - przycisk **Nowy** daje kolejny wolny numer. Można go też wpisać ręcznie.
 2. Wpisz imię i nazwisko osoby obdarowanej, zabieg (lub kwotę) i ewentualnie popraw datę ważności.
 3. **Pobierz JPEG** - zapisuje bon (2400 × 1500 px).
+   **Pobierz PDF do druku** (Massage 4 You) - A4 poziomo, bon 240 mm szerokości na środku ze znacznikami cięcia, do wydrukowania w domu.
 4. **Wyślij klientowi** - na telefonie otwiera systemowe udostępnianie z dołączonym plikiem (WhatsApp, Messenger, Gmail…). Na komputerze pobiera plik, kopiuje obraz do schowka i otwiera gotową wiadomość e-mail / WhatsApp do wklejenia.
 
 Lista „Ostatnio wystawione bony” i licznik numerów są zapisywane tylko w przeglądarce, na danym urządzeniu, osobno dla każdego studia.

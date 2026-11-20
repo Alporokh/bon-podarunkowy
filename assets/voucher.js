@@ -36,6 +36,7 @@
     needNumber: "Wpisz numer bonu.",
     needName: "Wpisz imię i nazwisko osoby obdarowanej.",
     downloaded: "Bon pobrany jako JPEG.",
+    pdfDownloaded: "Bon pobrany jako PDF - gotowy do druku na A4.",
     shared: "Bon udostępniony.",
     shareFailed: "Nie udało się udostępnić - spróbuj pobrać JPEG.",
     textCopied: "Treść wiadomości skopiowana.",
@@ -181,6 +182,52 @@
     $("download").addEventListener("click", async () => {
       const v = validate(); if (!v) return;
       await download(v); toast(T.downloaded);
+    });
+
+    /* Print-ready PDF: A4 landscape, voucher 240 mm wide centred, with cut marks.
+       Written by hand (one page, one JPEG image), so no PDF library is needed. */
+    function pdfFromJpeg(jpeg, title) {
+      const mm = 72 / 25.4, PW = 297 * mm, PH = 210 * mm;
+      const w = 240 * mm, ht = w * H / W, x = (PW - w) / 2, y = (PH - ht) / 2;
+      const f = (n) => n.toFixed(2), gap = 3 * mm, len = 7 * mm;
+      let marks = "";
+      for (const cx of [x, x + w]) for (const cy of [y, y + ht]) {
+        const sx = cx === x ? -1 : 1, sy = cy === y ? -1 : 1;
+        marks += `${f(cx + sx * gap)} ${f(cy)} m ${f(cx + sx * (gap + len))} ${f(cy)} l S ` +
+                 `${f(cx)} ${f(cy + sy * gap)} m ${f(cx)} ${f(cy + sy * (gap + len))} l S `;
+      }
+      const content = `q ${f(w)} 0 0 ${f(ht)} ${f(x)} ${f(y)} cm /Im0 Do Q 0.4 w 0.55 G ${marks}`;
+      // PDF strings: keep the title ASCII so no font/encoding is needed
+      const ascii = title.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L")
+        .replace(/[^\x20-\x7E]/g, "").replace(/[()\\]/g, "");
+      const objs = [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${f(PW)} ${f(PH)}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`,
+        [`<< /Length ${content.length} >>\nstream\n`, content, "\nendstream"],
+        [`<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, jpeg, "\nendstream"],
+        `<< /Title (${ascii}) /Producer (Voucher generator) >>`
+      ];
+      const enc = new TextEncoder(), parts = [], offsets = [];
+      let pos = 0;
+      const put = (p) => { const u = typeof p === "string" ? enc.encode(p) : p; parts.push(u); pos += u.length; };
+      put("%PDF-1.4\n"); put(new Uint8Array([37, 226, 227, 207, 211, 10]));
+      objs.forEach((o, i) => { offsets.push(pos); put(`${i + 1} 0 obj\n`); [].concat(o).forEach(put); put("\nendobj\n"); });
+      const xref = pos;
+      put(`xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join(""));
+      put(`trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info ${objs.length} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+      return new Blob(parts, { type: "application/pdf" });
+    }
+
+    if ($("pdf")) $("pdf").addEventListener("click", async () => {
+      const v = validate(); if (!v) return;
+      const jpeg = new Uint8Array(await (await toBlob("image/jpeg", 0.95)).arrayBuffer());
+      const blob = pdfFromJpeg(jpeg, b.subject(v));
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.jpg$/, ".pdf");
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      logIssued(v); toast(T.pdfDownloaded);
     });
 
     $("share").addEventListener("click", async () => {

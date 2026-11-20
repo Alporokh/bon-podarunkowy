@@ -79,6 +79,7 @@
 
       <div class="actions">
         <button class="btn" type="button" id="download">Pobierz JPEG</button>
+        <button class="btn secondary" type="button" id="pdf" title="A4 poziomo, ze znacznikami cięcia - do wydruku w domu">Pobierz PDF do druku</button>
         <button class="btn secondary" type="button" id="share">Wyślij klientowi</button>
       </div>
 
@@ -230,14 +231,21 @@ Voucher.start({
     '300 40px "M4Y Jost"', '400 40px "M4Y Jost"'
   ],
 
-  // logo mark, recoloured to the card's cream
+  // logo (figure + wordmark, as on massage-4-you.com) and the logo mark watermark, both recoloured to the card's cream
   async prepare({ assets, loadImage }) {
-    const mark = await loadImage("../assets/brands/massage-4-you-logo-mark.png");
-    const off = document.createElement("canvas"); off.width = mark.width; off.height = mark.height;
-    const o = off.getContext("2d");
-    o.drawImage(mark, 0, 0); o.globalCompositeOperation = "source-in";
-    o.fillStyle = "#F6F3EC"; o.fillRect(0, 0, off.width, off.height);
-    assets.mark = off;
+    const cream = (img) => {
+      const off = document.createElement("canvas"); off.width = img.width; off.height = img.height;
+      const o = off.getContext("2d");
+      o.drawImage(img, 0, 0); o.globalCompositeOperation = "source-in";
+      o.fillStyle = "#F6F3EC"; o.fillRect(0, 0, off.width, off.height);
+      return off;
+    };
+    const [mark, logo] = await Promise.allSettled([
+      loadImage("../assets/brands/massage-4-you-logo-mark.png"),
+      loadImage("../assets/brands/massage-4-you-logo.png")
+    ]);
+    if (mark.status === "fulfilled") assets.mark = cream(mark.value);
+    if (logo.status === "fulfilled") assets.logo = cream(logo.value);
   },
 
   /* Forest-green card, matches the site's .voucher-card */
@@ -256,15 +264,22 @@ Voucher.start({
       ctx.save(); ctx.globalAlpha = 0.08; ctx.drawImage(assets.mark, W - mw + 160, H - mh + 200, mw, mh); ctx.restore();
     }
 
-    // wordmark "MASSAGE 4 YOU" with the heavier 4, as on the site
-    ctx.textBaseline = "alphabetic"; ctx.fillStyle = CREAM;
-    const sp = 58 * 0.2; let x = P;
-    ctx.font = SERIF(58, 500); x += spaced("MASSAGE ", x, 250, sp) + sp;
-    ctx.font = SANS(52, 400); x += spaced("4", x, 250, sp) + sp;
-    ctx.font = SERIF(58, 500); spaced(" YOU", x, 250, sp);
-    ctx.fillStyle = soft; ctx.font = SANS(26, 300);
-    spaced("HEALTHY & RELAX", P, 305, 26 * 0.28);
-    ctx.font = SANS(30, 400);
+    ctx.textBaseline = "alphabetic";
+    if (assets.logo) {
+      // the studio's own logo from massage-4-you.com
+      const lw = 430, lh = lw * assets.logo.height / assets.logo.width;
+      ctx.drawImage(assets.logo, P, 95, lw, lh);
+    } else {
+      // fallback while the logo loads: typed wordmark with the heavier 4
+      ctx.fillStyle = CREAM;
+      const sp = 58 * 0.2; let x = P;
+      ctx.font = SERIF(58, 500); x += spaced("MASSAGE ", x, 250, sp) + sp;
+      ctx.font = SANS(52, 400); x += spaced("4", x, 250, sp) + sp;
+      ctx.font = SERIF(58, 500); spaced(" YOU", x, 250, sp);
+      ctx.fillStyle = soft; ctx.font = SANS(26, 300);
+      spaced("HEALTHY & RELAX", P, 305, 26 * 0.28);
+    }
+    ctx.fillStyle = soft; ctx.font = SANS(30, 400);
     spaced("VOUCHER UPOMINKOWY", W - P, 245, 30 * 0.2, "right");
 
     ctx.fillStyle = GOLD; ctx.font = SANS(28, 400);
