@@ -76,10 +76,11 @@
 
     <section class="preview" aria-label="Podgląd bonu">
       <div class="canvas-frame"><canvas id="voucher" width="2400" height="1500"></canvas></div>
+      <label class="toggle"><input type="checkbox" id="printPreview"> Pokaż wersję do druku (czarno-białą, jak w PDF)</label>
 
       <div class="actions">
         <button class="btn" type="button" id="download">Pobierz JPEG</button>
-        <button class="btn secondary" type="button" id="pdf" title="A4 poziomo, ze znacznikami cięcia - do wydruku w domu">Pobierz PDF do druku</button>
+        <button class="btn secondary" type="button" id="pdf" title="Czarno-biały, A4 poziomo, ze znacznikami cięcia - do wydruku w domu">Pobierz PDF do druku</button>
         <button class="btn secondary" type="button" id="share">Wyślij klientowi</button>
       </div>
 
@@ -233,19 +234,120 @@ Voucher.start({
 
   // logo (figure + wordmark, as on massage-4-you.com) and the logo mark watermark, both recoloured to the card's cream
   async prepare({ assets, loadImage }) {
-    const cream = (img) => {
+    const tint = (img, color) => {
       const off = document.createElement("canvas"); off.width = img.width; off.height = img.height;
       const o = off.getContext("2d");
       o.drawImage(img, 0, 0); o.globalCompositeOperation = "source-in";
-      o.fillStyle = "#F6F3EC"; o.fillRect(0, 0, off.width, off.height);
+      o.fillStyle = color; o.fillRect(0, 0, off.width, off.height);
       return off;
     };
     const [mark, logo] = await Promise.allSettled([
       loadImage("../assets/brands/massage-4-you-logo-mark.png"),
       loadImage("../assets/brands/massage-4-you-logo.png")
     ]);
-    if (mark.status === "fulfilled") assets.mark = cream(mark.value);
-    if (logo.status === "fulfilled") assets.logo = cream(logo.value);
+    if (mark.status === "fulfilled") { assets.mark = tint(mark.value, "#F6F3EC"); assets.markInk = tint(mark.value, "#000000"); }
+    if (logo.status === "fulfilled") { assets.logo = tint(logo.value, "#F6F3EC"); assets.logoInk = tint(logo.value, "#1A1A1A"); }
+  },
+
+  /* Black-and-white certificate for the printable PDF: white paper, double frame,
+     centred layout, the figure from the logo as a pale shade behind the text */
+  drawPrint(v, { ctx, W, H, spaced, fit, wrapFit, assets }) {
+    const b = this;
+    const INK = "#1A1A1A", GREY = "#5E5E5E", LIGHT = "#9A9A9A";
+    const SERIF = (s, w = 500, st = "") => `${st} ${w} ${s}px "M4Y Cormorant", Georgia, serif`;
+    const SANS = (s, w = 400) => `${w} ${s}px "M4Y Jost", system-ui, sans-serif`;
+    const CX = W / 2, P = 190;
+    ctx.textBaseline = "alphabetic";
+
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, W, H);
+
+    // the figure from the logo as a shade, large and pale
+    if (assets.markInk) {
+      const mw = 1560, mh = mw * assets.markInk.height / assets.markInk.width;
+      ctx.save(); ctx.globalAlpha = 0.055; ctx.drawImage(assets.markInk, CX - mw / 2 + 40, H - 66 - mh - 10, mw, mh); ctx.restore();
+    }
+
+    // double frame: a fine outer line and a hairline inside it
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeRect(50, 50, W - 100, H - 100);
+    ctx.lineWidth = 1.5; ctx.strokeRect(66, 66, W - 132, H - 132);
+
+    if (assets.logoInk) {
+      const lw = 330, lh = lw * assets.logoInk.height / assets.logoInk.width;
+      ctx.drawImage(assets.logoInk, CX - lw / 2, 112, lw, lh);
+    } else {
+      ctx.fillStyle = INK; ctx.font = SERIF(58, 500); ctx.textAlign = "center";
+      ctx.fillText("MASSAGE 4 YOU", CX, 270); ctx.textAlign = "left";
+    }
+
+    // title flanked by short rules
+    ctx.fillStyle = GREY; ctx.font = SANS(30, 400);
+    const tw = spaced("VOUCHER UPOMINKOWY", CX, 418, 30 * 0.32, "center");
+    ctx.fillStyle = LIGHT;
+    ctx.fillRect(CX - tw / 2 - 150, 407, 110, 1.5); ctx.fillRect(CX + tw / 2 + 40, 407, 110, 1.5);
+
+    const label = (t, y) => { ctx.fillStyle = GREY; ctx.font = SANS(26, 400); spaced(t, CX, y, 26 * 0.3, "center"); };
+    ctx.textAlign = "center";
+
+    // fewer blocks: move the recipient down so the content stays visually centred
+    const top0 = 515 + (v.item && v.wishes ? 0 : v.item || v.wishes ? 70 : 170);
+    label("DLA", top0);
+    const name = v.name || "Imię i nazwisko";
+    const ns = fit(name, (s) => SERIF(s, 500), 140, 70, W - 2 * P - 100);
+    ctx.fillStyle = v.name ? INK : "#C8C8C8"; ctx.font = SERIF(ns, 500);
+    let y = top0 + 28 + ns * 0.92;
+    ctx.fillText(name, CX, y);
+
+    if (v.item) {
+      y += 100;
+      label(/^\d[\d\s]*(zł|pln)$/i.test(v.item) ? "KWOTA" : "ZABIEG", y);
+      const hasDigits = /\d/.test(v.item);
+      const itemFont = hasDigits ? (s) => SANS(Math.round(s * 0.8), 300) : (s) => SERIF(s, 400, "italic");
+      const w = wrapFit(v.item, itemFont, 70, 42, W - 2 * P - 200, 2);
+      ctx.fillStyle = INK; ctx.font = itemFont(w.size);
+      w.lines.forEach((l, i) => ctx.fillText(l, CX, y + 24 + w.size * 0.95 + i * w.size * 1.15));
+      y += 24 + w.size * 0.95 + (w.lines.length - 1) * w.size * 1.15;
+    }
+
+    // wishes: italic, centred, own line breaks kept, shrunk to fit above the footer
+    if (v.wishes) {
+      const top = y + 70, bottom = 1135, colW = 1560;
+      const font = (s) => SERIF(s, 400, "italic");
+      let size = 50, lines = [];
+      for (; size >= 28; size -= 2) {
+        ctx.font = font(size); lines = [];
+        for (const para of v.wishes.split(/\n/)) {
+          let line = "";
+          const glued = para.trim().replace(/(^| )([aiouwzAIOUWZ]) +/g, "$1$2 ");
+          for (const word of glued.split(/ +/).filter(Boolean)) {
+            const test = line ? line + " " + word : word;
+            if (ctx.measureText(test).width <= colW || !line) line = test; else { lines.push(line); line = word; }
+          }
+          lines.push(line);
+        }
+        if (top + lines.length * size * 1.3 <= bottom && lines.every((l) => ctx.measureText(l).width <= colW)) break;
+      }
+      ctx.fillStyle = "#333333"; ctx.font = font(size);
+      lines.forEach((l, i) => ctx.fillText(i === 0 ? "„" + l : l, CX, top + size + i * size * 1.3));
+      // closing quote after the last line
+      const last = lines[lines.length - 1], lx = CX + ctx.measureText(last).width / 2;
+      ctx.textAlign = "left"; ctx.fillText("”", lx + 2, top + size + (lines.length - 1) * size * 1.3); ctx.textAlign = "center";
+    }
+
+    // footer: number left, validity centre, contact right
+    const ry = 1180;
+    ctx.fillStyle = "#BDBDBD"; ctx.fillRect(P, ry, W - 2 * P, 1.5);
+    ctx.textAlign = "left";
+    [["NUMER VOUCHERA", v.number || "-", P, "left"], ["WAŻNY DO", v.validText || "-", CX, "center"]].forEach(([lab, val, x, al]) => {
+      ctx.fillStyle = GREY; ctx.font = SANS(23, 400); spaced(lab, x, ry + 62, 23 * 0.26, al);
+      ctx.fillStyle = INK; ctx.font = SANS(44, 300); ctx.textAlign = al; ctx.fillText(val, x, ry + 122); ctx.textAlign = "left";
+    });
+    ctx.textAlign = "right"; ctx.font = SANS(28, 300);
+    ctx.fillStyle = INK; ctx.fillText(b.address, W - P, ry + 72);
+    ctx.fillStyle = GREY; ctx.fillText(`${b.phone}  ·  ${b.site}`, W - P, ry + 117);
+
+    ctx.textAlign = "center"; ctx.fillStyle = LIGHT; ctx.font = SANS(21, 300);
+    ctx.fillText("Voucher imienny, nie podlega wymianie na gotówkę. Rezerwacja terminu telefonicznie lub przez stronę.", CX, H - 100);
+    ctx.textAlign = "left";
   },
 
   /* Forest-green card, matches the site's .voucher-card */

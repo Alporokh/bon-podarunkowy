@@ -88,9 +88,15 @@
 
     /* ---------------- Canvas drawing helpers ---------------- */
     const canvas = $("voucher");
-    const ctx = canvas.getContext("2d");
     const W = canvas.width, H = canvas.height;
+    function loadImage(src) {
+      return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    }
+    const assets = {};
 
+    // drawing helpers bound to one canvas (the on-screen preview or an off-screen export canvas)
+    function helpers(cv) {
+    const ctx = cv.getContext("2d");
     // letter-spaced text, drawn glyph by glyph (ctx.letterSpacing is not universal yet)
     function spaced(text, x, y, spacing, align = "left") {
       const chars = [...text];
@@ -132,20 +138,27 @@
       stops.forEach(([p, c]) => g.addColorStop(p, c));
       return g;
     }
-    function loadImage(src) {
-      return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    return { ctx, W, H, spaced, fit, wrapFit, diagonalGradient, loadImage, assets };
     }
+    const h = helpers(canvas);
 
-    const assets = {};
-    const h = { ctx, W, H, spaced, fit, wrapFit, diagonalGradient, loadImage, assets };
-
-    function render() {
-      ctx.clearRect(0, 0, W, H);
-      b.draw(values(), h);
+    // pages may add drawPrint(): a black-and-white design used for the printable PDF
+    const printView = () => !!(b.drawPrint && $("printPreview") && $("printPreview").checked);
+    function paint(hh, print) {
+      hh.ctx.clearRect(0, 0, W, H);
+      (print ? b.drawPrint : b.draw).call(b, values(), hh);
+    }
+    function render() { paint(h, printView()); }
+    // the colour or print version, reusing the preview canvas when it already shows that version
+    function exportCanvas(print) {
+      if (print === printView()) return canvas;
+      const off = document.createElement("canvas"); off.width = W; off.height = H;
+      paint(helpers(off), print);
+      return off;
     }
 
     /* ---------------- Export ---------------- */
-    const toBlob = (type, q) => new Promise((res) => canvas.toBlob(res, type, q));
+    const toBlob = (type, q, cv = exportCanvas(false)) => new Promise((res) => cv.toBlob(res, type, q));
     function fileName() {
       const v = values();
       return `${T.filePrefix}-${b.fileSlug}-${slug(v.number || T.noNumber)}${v.name ? "-" + slug(v.name) : ""}.jpg`;
@@ -221,7 +234,7 @@
 
     if ($("pdf")) $("pdf").addEventListener("click", async () => {
       const v = validate(); if (!v) return;
-      const jpeg = new Uint8Array(await (await toBlob("image/jpeg", 0.95)).arrayBuffer());
+      const jpeg = new Uint8Array(await (await toBlob("image/jpeg", 0.95, exportCanvas(!!b.drawPrint))).arrayBuffer());
       const blob = pdfFromJpeg(jpeg, b.subject(v));
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob); a.download = fileName().replace(/\.jpg$/, ".pdf");
@@ -266,7 +279,7 @@
 
     /* ---------------- Wiring ---------------- */
     $("nextNumber").addEventListener("click", () => { $("number").value = nextNumber(); render(); });
-    ["number", "name", "item", "amount", "wishes", "valid"].forEach((id) => $(id) && $(id).addEventListener("input", render));
+    ["number", "name", "item", "amount", "wishes", "valid", "printPreview"].forEach((id) => $(id) && $(id).addEventListener("input", render));
     $("issued").addEventListener("input", () => {
       if ($("issued").value) $("valid").value = addMonths($("issued").value, b.validityMonths);
       render();
